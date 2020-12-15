@@ -1,1 +1,4 @@
 /node_modules
+/build
+/images/*
+!/images/example.jpg
