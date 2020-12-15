@@ -5,23 +5,31 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 const cors = require('cors')
 const JWT = require('jsonwebtoken')
+const path = require('path')
 const Schemas = require('./Schemas')
 
+// creating schemas for models
 const PictureScheme = new mongoose.Schema(Schemas.PictureScheme, { versionKey: false })
 const UserScheme = new mongoose.Schema(Schemas.UserScheme, { versionKey: false })
 
+// creating models
 const User = mongoose.model('User', UserScheme)
 const Picture = mongoose.model('Posts', PictureScheme)
 
+// important string constants
 const JWTSecretKey = 'this is very secret key for JWT auth and nobody should know it'
 const mongoURL = 'mongodb://localhost:27017/VasyokkrutProjectDB'
 
+// creating main application object
+// and applying middlewares
 const app = express()
 app.use(cors())
 app.use(fileUpload())
 app.use(express.text())
 app.use(express.json())
+app.use(express.static(path.resolve(__dirname, 'build')))
 
+// connecting to mongodb server
 mongoose.connect(mongoURL, {useNewUrlParser: true, useUnifiedTopology: true})
     .then(() => console.log('DB Connected'))
     .catch(error => {console.log(error);throw error})
@@ -167,6 +175,18 @@ app.get('/downloadPicture/:pictureName', (req, res) => {
         `${__dirname}/images/${pictureName}`,
         {headers:{'Content-Disposition': `attachment; filename="${pictureName}"`}}
     )
+})
+
+// '/' endpoint responds index.html file
+// which is entrypoint to start page
+app.get('/', (req, res) => {
+    res.sendFile(path.resolve(__dirname, 'build', 'index.html'))
+})
+
+// '/upload' endpoint responds index.html file
+// which is entrypoint to upload page
+app.get('/upload', (req, res) => {
+    res.sendFile(path.resolve(__dirname, 'build', 'index.html'))
 })
 
 async function exitFromServer() {
