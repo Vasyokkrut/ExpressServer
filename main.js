@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt')
 const cors = require('cors')
 const JWT = require('jsonwebtoken')
 const path = require('path')
+
 const Schemas = require('./Schemas')
 
 // creating schemas for models
@@ -34,8 +35,8 @@ mongoose.connect(mongoURL, {useNewUrlParser: true, useUnifiedTopology: true})
     .then(() => console.log('DB Connected'))
     .catch(error => {console.log(error);throw error})
 
-app.post('/register', async (req, res) => {
-    await User.find({name:req.body.login}, async (err, ans) => {
+app.post('/register', (req, res) => {
+    User.find({name:req.body.login}, async (err, ans) => {
         if(err) return res.sendStatus(500)
         if (ans.length!==0) {
             return res.sendStatus(208)
@@ -52,7 +53,7 @@ app.post('/register', async (req, res) => {
     })
 })
 
-app.post('/login', async (req, res) => {
+app.post('/login', (req, res) => {
     let login = req.body.login
     let password = req.body.password
     User.find({name:login}, (err, ans) => {
@@ -74,7 +75,7 @@ app.post('/api/uploadPicture' , async (req , res) => {
     let file = req.files.image
     let title = req.body.title
     const picture = new Picture({fileName:file.md5 + file.name, name:title})
-    picture.save().catch(el => console.log('error picture saving'))
+    picture.save().catch(() => console.log('error picture saving'))
     if(FS.existsSync(`${__dirname}/images/${file.md5 + file.name}`)) {
         res.status(200).json({post:picture, Status:'successful'})
     }
@@ -87,7 +88,7 @@ app.post('/api/uploadPicture' , async (req , res) => {
     }
 })
 
-app.post('/api/uploadPictureForUser' , async (req , res) => {
+app.post('/api/uploadPictureForUser' , (req , res) => {
     let JWTtoken = req.headers.authorization
     let file = req.files.image
     let title = req.body.title
@@ -113,14 +114,14 @@ app.post('/api/uploadPictureForUser' , async (req , res) => {
     })
 })
 
-app.get('/api/getImages', async (req, res) => {
+app.get('/api/getImages', (_, res) => {
     Picture.find({}, (err, ans) => {
         if(err) return res.sendStatus(500)
         res.status(200).json({images:ans})
     })
 })
 
-app.get('/api/getUserImages', async (req, res) => {
+app.get('/api/getUserImages', (req, res) => {
     let JWTtoken = req.headers.authorization
     JWT.verify(JWTtoken, JWTSecretKey, (err, user) => {
         if(err) return res.sendStatus(401)
@@ -131,14 +132,14 @@ app.get('/api/getUserImages', async (req, res) => {
     })
 })
 
-app.get('/api/getImage/:id', async (req, res) => {
+app.get('/api/getImage/:id', (req, res) => {
     Picture.find({_id:req.params.id}, (err, ans) => {
         if(err) return console.log('errorInGetImage')
         res.sendFile(`${__dirname}/images/${ans[0].fileName}`)
     })
 })
 
-app.get('/api/getUserImage/:username/:id', async (req, res) => {
+app.get('/api/getUserImage/:username/:id', (req, res) => {
     User.find({name:req.params.username}, (err, ans) => {
         if(err) return console.log('errorInGetUserImage')
         if(ans.length===0) return res.sendStatus(400)
@@ -147,14 +148,14 @@ app.get('/api/getUserImage/:username/:id', async (req, res) => {
     })
 })
 
-app.delete('/api/deleteImage', async (req, res) => {
-    await Picture.deleteOne({_id:req.body.delete}, (err, ans) => {
+app.delete('/api/deleteImage', (req, res) => {
+    Picture.deleteOne({_id:req.body.delete}, (err, ans) => {
         if(err) return console.log('error happaned during deleting')
         res.status(200).json({deleted:true, id:ans})
     })
 })
 
-app.delete('/api/deleteUserImage', async (req, res) => {
+app.delete('/api/deleteUserImage', (req, res) => {
     let JWTtoken = req.headers.authorization
     JWT.verify(JWTtoken, JWTSecretKey, (err, user) => {
         if(err) return res.sendStatus(401)
@@ -179,13 +180,13 @@ app.get('/downloadPicture/:pictureName', (req, res) => {
 
 // '/' endpoint responds index.html file
 // which is entrypoint to start page
-app.get('/', (req, res) => {
+app.get('/', (_, res) => {
     res.sendFile(path.resolve(__dirname, 'build', 'index.html'))
 })
 
 // '/upload' endpoint responds index.html file
 // which is entrypoint to upload page
-app.get('/upload', (req, res) => {
+app.get('/upload', (_, res) => {
     res.sendFile(path.resolve(__dirname, 'build', 'index.html'))
 })
 
