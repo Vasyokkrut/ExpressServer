@@ -1,13 +1,13 @@
 const express = require('express')
 const FS = require('fs')
 const JWT = require('jsonwebtoken')
-const { JWTSecretKey } = require('./env')
 
+const { JWTSecretKey } = require('./env')
 const { Picture, User } = require('./models')
 
 const apiRouter = express.Router()
 
-apiRouter.post('/uploadPicture' , async (req , res) => {
+apiRouter.post('/uploadPicture' , async (req, res) => {
     let file = req.files.image
     let title = req.body.title
     const picture = new Picture({fileName:file.md5 + file.name, name:title})
@@ -50,7 +50,7 @@ apiRouter.post('/uploadPictureForUser' , (req , res) => {
     })
 })
 
-apiRouter.get('/getImages', (_, res) => {
+apiRouter.get('/getImages', (_req, res) => {
     Picture.find({}, (err, ans) => {
         if(err) return res.sendStatus(500)
         res.status(200).json({images:ans})
