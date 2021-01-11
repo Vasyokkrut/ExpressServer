@@ -8,7 +8,7 @@ const path = require('path')
 
 const { User } = require('./models')
 const { apiRoutes } = require('./apiRoutes')
-const { JWTSecretKey, mongoURL } = require('./env')
+const { JWTSecretKey, mongoURL, mongoSettings } = require('./env')
 
 // creating main application object
 // and applying middlewares
@@ -21,13 +21,12 @@ app.use('/api', apiRoutes)
 app.use(express.static(path.resolve(__dirname, 'build')))
 
 // connecting to mongodb server
-const mongoSettings = {useNewUrlParser: true, useUnifiedTopology: true}
 mongoose.connect(mongoURL, mongoSettings)
     .catch(error => {throw error})
     .then(() => console.log('DB Connected'))
 
 app.post('/register', (req, res) => {
-    User.find({name:req.body.login}, async (err, ans) => {
+    User.find({name:req.body.login}, (err, ans) => {
         if(err) return res.sendStatus(500)
         if (ans.length!==0) {
             return res.sendStatus(208)
@@ -39,8 +38,9 @@ app.post('/register', (req, res) => {
             posts:[{fileName:'example.jpg',name:'This is your first post'}]
         }
         let user = new User(newUser)
-        await user.save().catch(el => console.log('error user saving'))
-        res.sendStatus(201)
+        user.save()
+            .catch(() => res.sendStatus(500))
+            .then(() => res.sendStatus(201))
     })
 })
 
