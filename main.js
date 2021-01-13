@@ -13,6 +13,7 @@ const { JWTSecretKey, mongoURL, mongoSettings } = require('./env')
 // creating main application object
 // and applying middlewares
 const app = express()
+app.disable('x-powered-by')
 app.use(cors())
 app.use(fileUpload())
 app.use(express.text())
@@ -63,11 +64,8 @@ app.post('/login', (req, res) => {
 })
 
 app.get('/downloadPicture/:pictureName', (req, res) => {
-    pictureName=req.params.pictureName
-    res.sendFile(
-        `${__dirname}/images/${pictureName}`,
-        {headers:{'Content-Disposition': `attachment; filename="${pictureName}"`}}
-    )
+    const pictureName=req.params.pictureName
+    res.download(`${__dirname}/images/${pictureName}`)
 })
 
 // '/' endpoint responds index.html file
