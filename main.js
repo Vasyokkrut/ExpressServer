@@ -27,14 +27,16 @@ mongoose.connect(mongoURL, mongoSettings)
     .then(() => console.log('DB Connected'))
 
 app.post('/register', (req, res) => {
-    User.find({name:req.body.login}, (err, ans) => {
+    let checkUserName = RegExp(`^${req.body.login}$`, 'i')
+    let userName = req.body.login
+    User.find({name:checkUserName}, (err, ans) => {
         if(err) return res.sendStatus(500)
         if (ans.length!==0) {
             return res.sendStatus(208)
         }
         let passwordHash = bcrypt.hashSync(req.body.password, 10)
         let newUser = {
-            name:req.body.login,
+            name:userName,
             password:passwordHash,
             posts:[{fileName:'example.jpg',name:'This is your first post'}]
         }

@@ -57,14 +57,11 @@ apiRouter.get('/getImages', (_req, res) => {
     })
 })
 
-apiRouter.get('/getUserImages', (req, res) => {
-    let JWTtoken = req.headers.authorization
-    JWT.verify(JWTtoken, JWTSecretKey, (err, user) => {
-        if(err) return res.sendStatus(401)
-        User.findOne({name:user.login}, (err, ans) => {
-            if(err) return res.sendStatus(500)
-            res.status(200).json({images:ans.posts})
-        })
+apiRouter.get('/getUserImages/:user', (req, res) => {
+    User.findOne({name:req.params.user}, (err, ans) => {
+        if (err) return res.sendStatus(500)
+        if (ans === null) return res.sendStatus(404)
+        res.status(200).json({images:ans.posts})
     })
 })
 
