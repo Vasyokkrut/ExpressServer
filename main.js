@@ -27,8 +27,8 @@ mongoose.connect(mongoURL, mongoSettings)
     .then(() => console.log('DB Connected'))
 
 app.post('/register', (req, res) => {
-    let checkUserName = RegExp(`^${req.body.login}$`, 'i')
     let userName = req.body.login
+    let checkUserName = RegExp(`^${userName}$`, 'i')
     User.find({name:checkUserName}, (err, ans) => {
         if(err) return res.sendStatus(500)
         if (ans.length!==0) {
@@ -76,9 +76,15 @@ app.get('/', (_, res) => {
     res.sendFile(path.resolve(__dirname, 'build', 'index.html'))
 })
 
-// '/upload' endpoint responds index.html file
+// '/publicPosts' endpoint responds index.html file
 // which is entrypoint to upload page
-app.get('/upload', (_, res) => {
+app.get('/publicPosts', (_, res) => {
+    res.sendFile(path.resolve(__dirname, 'build', 'index.html'))
+})
+
+// '/userPosts/*' endpoint responds index.html file
+// which is entrypoint to upload page
+app.get('/userPosts/*', (_, res) => {
     res.sendFile(path.resolve(__dirname, 'build', 'index.html'))
 })
 

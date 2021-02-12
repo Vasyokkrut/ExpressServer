@@ -74,17 +74,20 @@ apiRouter.get('/getImage/:id', (req, res) => {
 
 apiRouter.get('/getUserImage/:username/:id', (req, res) => {
     User.find({name:req.params.username}, (err, ans) => {
-        if(err) return console.log('errorInGetUserImage')
-        if(ans.length===0) return res.sendStatus(400)
+        if(err) {
+            res.sendStatus(500)
+            return
+        }
+        if(ans.length===0) {
+            res.sendStatus(400)
+            return
+        }
         let image = ans[0].posts.find(el => el._id.toString('hex') === req.params.id)
-        res.sendFile(`${__dirname}/images/${image.fileName}`)
-    })
-})
-
-apiRouter.delete('/deleteImage', (req, res) => {
-    Picture.deleteOne({_id:req.body.delete}, (err, ans) => {
-        if(err) return console.log('error happaned during deleting')
-        res.status(200).json({deleted:true, id:ans})
+        if(image){
+            res.sendFile(`${__dirname}/images/${image.fileName}`)
+        } else {
+            res.sendStatus(404)
+        }
     })
 })
 
