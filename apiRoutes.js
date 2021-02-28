@@ -57,11 +57,12 @@ apiRouter.get('/getImages', (_req, res) => {
     })
 })
 
-apiRouter.get('/getUserImages/:user', (req, res) => {
-    User.findOne({name:req.params.user}, (err, ans) => {
+apiRouter.get('/getUserInfo/:user', (req, res) => {
+    const userName = RegExp(`^${req.params.user}$`, 'i')
+    User.findOne({name:userName}, (err, ans) => {
         if (err) return res.sendStatus(500)
         if (ans === null) return res.sendStatus(404)
-        res.status(200).json({images:ans.posts})
+        res.status(200).json({posts:ans.posts, userName: ans.name})
     })
 })
 
@@ -73,7 +74,8 @@ apiRouter.get('/getImage/:id', (req, res) => {
 })
 
 apiRouter.get('/getUserImage/:username/:id', (req, res) => {
-    User.find({name:req.params.username}, (err, ans) => {
+    const userName = RegExp(`^${req.params.username}$`, 'i')
+    User.find({name:userName}, (err, ans) => {
         if(err) {
             res.sendStatus(500)
             return
