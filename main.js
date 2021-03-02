@@ -1,14 +1,14 @@
-const express = require('express')
-const fileUpload = require('express-fileupload')
-const mongoose = require('mongoose')
-const bcrypt = require('bcrypt')
-const cors = require('cors')
-const JWT = require('jsonwebtoken')
 const path = require('path')
+const cors = require('cors')
+const bcrypt = require('bcrypt')
+const express = require('express')
+const JWT = require('jsonwebtoken')
+const mongoose = require('mongoose')
+const fileUpload = require('express-fileupload')
 
-const { User } = require('./models')
-const { apiRoutes } = require('./apiRoutes')
-const { JWTSecretKey, mongoURL, mongoSettings } = require('./env')
+const { User } = require('./models.js')
+const { apiRoutes } = require('./apiRoutes.js')
+const { JWTSecretKey, mongoURL, mongoSettings } = require('./env.js')
 
 // creating main application object
 // and applying middlewares

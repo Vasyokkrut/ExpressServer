@@ -1,13 +1,14 @@
-const express = require('express')
 const FS = require('fs')
+const express = require('express')
 const JWT = require('jsonwebtoken')
 
-const { JWTSecretKey } = require('./env')
-const { Picture, User } = require('./models')
+const { JWTSecretKey } = require('./env.js')
+const { Picture, User } = require('./models.js')
+const { authenticateToken } = require('./middlewares.js')
 
 const apiRouter = express.Router()
 
-apiRouter.post('/uploadPicture' , async (req, res) => {
+apiRouter.put('/uploadPicture' , async (req, res) => {
     let file = req.files.image
     let title = req.body.title
     const picture = new Picture({fileName:file.md5 + file.name, name:title})
@@ -24,33 +25,32 @@ apiRouter.post('/uploadPicture' , async (req, res) => {
     }
 })
 
-apiRouter.post('/uploadPictureForUser' , (req , res) => {
-    let JWTtoken = req.headers.authorization
-    let file = req.files.image
-    let title = req.body.title
+apiRouter.put('/uploadPictureForUser', authenticateToken, async (req , res) => {
+    const file = req.files.image
+    const title = req.body.title
     const picture = {fileName:file.md5 + file.name, name:title}
-    JWT.verify(JWTtoken, JWTSecretKey, async (err, user) => {
-        if(err) return res.sendStatus(401)
-        await User.findOneAndUpdate(
-                {name:user.login},
-                {$push:{posts:picture}},
-                {useFindAndModify:false, new:true}
-            )
-            .then(ans => {
-                let lastItem=ans.posts.length-1
-                res.status(200).json(ans.posts[lastItem])
-            })
-            .catch(err => console.log(err))
-        if(!FS.existsSync(`${__dirname}/images/${file.md5 + file.name}`)) {
-            file.mv(
-                `${__dirname}/images/${file.md5 + file.name}`,
-                err => {if(err){console.log(err)}}
-            )
-        }
-    })
+
+    await User.findOneAndUpdate(
+            {name: req.user.login},
+            {$push: {posts: picture}},
+            {new: true}
+        )
+        .then(ans => {
+            let lastItem = ans.posts.length - 1
+            res.status(200).json(ans.posts[lastItem])
+        })
+        .catch(err => res.sendStatus(500))
+
+    // check if image doesn't exist and save it on local disk
+    if(!FS.existsSync(`${__dirname}/images/${file.md5 + file.name}`)) {
+        file.mv(
+            `${__dirname}/images/${file.md5 + file.name}`,
+            err => {if (err) res.sendStatus(500)}
+        )
+    }
 })
 
-apiRouter.get('/getImages', (_req, res) => {
+apiRouter.get('/getPublicPosts', (_req, res) => {
     Picture.find({}, (err, ans) => {
         if(err) return res.sendStatus(500)
         res.status(200).json({images:ans})
@@ -59,6 +59,7 @@ apiRouter.get('/getImages', (_req, res) => {
 
 apiRouter.get('/getUserInfo/:user', (req, res) => {
     const userName = RegExp(`^${req.params.user}$`, 'i')
+
     User.findOne({name:userName}, (err, ans) => {
         if (err) return res.sendStatus(500)
         if (ans === null) return res.sendStatus(404)
@@ -75,15 +76,11 @@ apiRouter.get('/getImage/:id', (req, res) => {
 
 apiRouter.get('/getUserImage/:username/:id', (req, res) => {
     const userName = RegExp(`^${req.params.username}$`, 'i')
+
     User.find({name:userName}, (err, ans) => {
-        if(err) {
-            res.sendStatus(500)
-            return
-        }
-        if(ans.length===0) {
-            res.sendStatus(400)
-            return
-        }
+        if (err) return res.sendStatus(500)
+        if (ans.length === 0) return res.sendStatus(400)
+        
         let image = ans[0].posts.find(el => el._id.toString('hex') === req.params.id)
         if(image){
             res.sendFile(`${__dirname}/images/${image.fileName}`)
@@ -93,16 +90,48 @@ apiRouter.get('/getUserImage/:username/:id', (req, res) => {
     })
 })
 
-apiRouter.delete('/deleteUserImage', (req, res) => {
-    let JWTtoken = req.headers.authorization
-    JWT.verify(JWTtoken, JWTSecretKey, (err, user) => {
-        if(err) return res.sendStatus(401)
-        User.findOneAndUpdate({name:user.login},
-            {$pull:{posts:{_id:req.body.delete}}},
-            {useFindAndModify:false, new:true},
+apiRouter.delete('/deleteUserImage', authenticateToken, (req, res) => {
+    User.findOneAndUpdate(
+        {name: req.user.login},
+        {$pull: {posts: {_id: req.body.delete}}},
+        {new:true},
+        (err, ans) => {
+            if (err) return res.sendStatus(500)
+            res.status(200).json({deleted:true, id:ans})
+        }
+    )
+})
+
+apiRouter.patch('/changeNickname', authenticateToken, (req, res) => {
+    const newNickname = req.body.newNickname
+    
+    // check is new nickname not empty
+    if (!newNickname) return res.sendStatus(406)
+
+    User.findOne({name: newNickname}, (err, ans) => {
+        // check if error happened
+        if (err) return res.sendStatus(500)
+        // check does user exist yet
+        if (ans) return res.sendStatus(406)
+
+        // searching user by it's current nickname and replacing it by new one
+        User.findOneAndUpdate(
+            {name: req.user.login},
+            {$set: {name: newNickname}},
+            {new:true},
             (err, ans) => {
+                // check if error happened
                 if (err) return res.sendStatus(500)
-                res.status(200).json({deleted:true, id:ans})
+                // generating new json web token for user
+                JWT.sign(
+                    { login: newNickname },
+                    JWTSecretKey,
+                    { algorithm: 'HS512' },
+                    (err, token) => {
+                        if(err) return res.sendStatus(500)
+                        return res.status(200).json({newJWTToken: token})
+                    }
+                )
             }
         )
     })

@@ -7,4 +7,4 @@ exports.JWTSecretKey = 'JWTSecretKey'
 exports.mongoURL = 'mongodb://localhost:27017/VasyokkrutProjectDB'
 
 // this is mongoose config object
-exports.mongoSettings = {useNewUrlParser: true, useUnifiedTopology: true}
+exports.mongoSettings = {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify:false}
