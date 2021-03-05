@@ -34,13 +34,13 @@ app.post('/register', (req, res) => {
         if (ans.length!==0) {
             return res.sendStatus(208)
         }
-        let passwordHash = bcrypt.hashSync(req.body.password, 10)
-        let newUser = {
+        const passwordHash = bcrypt.hashSync(req.body.password, 10)
+        const newUser = {
             name:userName,
             password:passwordHash,
             posts:[{fileName:'example.jpg',name:'This is your first post'}]
         }
-        let user = new User(newUser)
+        const user = new User(newUser)
         user.save()
             .catch(() => res.sendStatus(500))
             .then(() => res.sendStatus(201))

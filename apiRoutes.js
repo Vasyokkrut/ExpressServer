@@ -1,4 +1,5 @@
 const FS = require('fs')
+const bcrypt = require('bcrypt')
 const express = require('express')
 const JWT = require('jsonwebtoken')
 
@@ -105,24 +106,24 @@ apiRouter.delete('/deleteUserImage', authenticateToken, (req, res) => {
 apiRouter.patch('/changeNickname', authenticateToken, (req, res) => {
     const newNickname = req.body.newNickname
     const currentUserName = req.user.login
+    const allowedSymbols = /^[A-Za-z0-9]+$/
 
-    // check is new nickname not empty
-    if (!newNickname) return res.sendStatus(406)
+    // new nickname could contain only letters and numbers
+    if (!allowedSymbols.test(newNickname)) return res.sendStatus(406)
+
+    // check is new nickname contains any kind of spaces or endlines
+    if (/\s/.test(newNickname)) return res.sendStatus(406)
 
     const checkUserName = RegExp('^' + newNickname + '$', 'i')
 
     User.findOne({name: checkUserName}, (err, ans) => {
 
-        // check if error happened
         if (err) return res.sendStatus(500)
-
-        if (/\s/.test(newNickname)) return res.sendStatus(406)
-        if (!newNickname.trim()) return res.sendStatus(406)
 
         // check if user found, but this is not the same user
         if (ans) {
             const isTheSameUser = RegExp('^' + ans.name + '$', 'i').test(currentUserName)
-            if (!isTheSameUser) return res.sendStatus(406)
+            if (!isTheSameUser) return res.status(200).json({userExists: true})
         }
 
         // searching user by it's current nickname and replacing it by new one
@@ -132,7 +133,6 @@ apiRouter.patch('/changeNickname', authenticateToken, (req, res) => {
             {new: true},
             (err, ans) => {
 
-                // check if error happened
                 if (err) return res.sendStatus(500)
 
                 // generating new json web token for user
@@ -151,6 +151,34 @@ apiRouter.patch('/changeNickname', authenticateToken, (req, res) => {
 
     })
 
+})
+
+apiRouter.patch('/changePassword', authenticateToken, (req, res) => {
+
+    const newPassword = req.body.newPassword
+    const userName = req.user.login
+    const allowedSymbols = /^[A-Za-z0-9]+$/
+
+    // new password could contain only letters and numbers
+    if (!allowedSymbols.test(newPassword)) return res.sendStatus(406)
+
+    // check is new password contains any kind of spaces or endlines
+    if (/\s/.test(newPassword)) return res.sendStatus(406)
+
+    const passwordHash = bcrypt.hashSync(req.body.newPassword, 10)
+
+    User.findOneAndUpdate(
+        {name: userName},
+        {$set: {password: passwordHash}},
+        {new: true},
+        (err, ans) => {
+
+            if (err) return res.sendStatus(500)
+
+            res.sendStatus(200)
+
+        }
+    )
 })
 
 exports.apiRoutes = apiRouter
