@@ -27,8 +27,8 @@ mongoose.connect(mongoURL, mongoSettings)
     .then(() => console.log('DB Connected'))
 
 app.post('/register', (req, res) => {
-    let userName = req.body.login
-    let checkUserName = RegExp(`^${userName}$`, 'i')
+    const userName = req.body.login
+    const checkUserName = RegExp('^' + userName + '$', 'i')
     User.find({name:checkUserName}, (err, ans) => {
         if(err) return res.sendStatus(500)
         if (ans.length!==0) {
@@ -48,11 +48,11 @@ app.post('/register', (req, res) => {
 })
 
 app.post('/login', (req, res) => {
-    let login = req.body.login
-    let password = req.body.password
+    const login = req.body.login
+    const password = req.body.password
     User.find({name:login}, (err, ans) => {
         if(err) return res.sendStatus(500)
-        if(ans.length===0) return res.status(400).json({status:'wrong password or login'})
+        if(ans.length === 0) return res.status(400).json({status: 'wrong password or login'})
         let isPasswordCorrect = bcrypt.compareSync(password, ans[0].password)
         if(isPasswordCorrect) {
             JWT.sign({ login }, JWTSecretKey, { algorithm: 'HS512' }, (err, token) => {
@@ -60,13 +60,13 @@ app.post('/login', (req, res) => {
                 res.status(200).json({status:'user found', JWTToken: token})
             })
         } else {
-            res.status(400).json({status:'wrong password or login'})
+            res.status(400).json({status: 'wrong password or login'})
         }
     })
 })
 
 app.get('/downloadPicture/:pictureName', (req, res) => {
-    const pictureName=req.params.pictureName
+    const pictureName = req.params.pictureName
     res.download(`${__dirname}/images/${pictureName}`)
 })
 
@@ -77,13 +77,13 @@ app.get('/', (_, res) => {
 })
 
 // '/publicPosts' endpoint responds index.html file
-// which is entrypoint to upload page
+// which is entrypoint to public posts page
 app.get('/publicPosts', (_, res) => {
     res.sendFile(path.resolve(__dirname, 'build', 'index.html'))
 })
 
 // '/userPosts/*' endpoint responds index.html file
-// which is entrypoint to upload page
+// which is entrypoint to user posts page
 app.get('/userPosts/*', (_, res) => {
     res.sendFile(path.resolve(__dirname, 'build', 'index.html'))
 })

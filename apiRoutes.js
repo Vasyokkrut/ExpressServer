@@ -75,7 +75,7 @@ apiRouter.get('/getImage/:id', (req, res) => {
 })
 
 apiRouter.get('/getUserImage/:username/:id', (req, res) => {
-    const userName = RegExp(`^${req.params.username}$`, 'i')
+    const userName = RegExp('^' + req.params.username + '$', 'i')
 
     User.find({name:userName}, (err, ans) => {
         if (err) return res.sendStatus(500)
@@ -97,31 +97,44 @@ apiRouter.delete('/deleteUserImage', authenticateToken, (req, res) => {
         {new:true},
         (err, ans) => {
             if (err) return res.sendStatus(500)
-            res.status(200).json({deleted:true, id:ans})
+            res.status(200).json({deleted: true, id: ans})
         }
     )
 })
 
 apiRouter.patch('/changeNickname', authenticateToken, (req, res) => {
     const newNickname = req.body.newNickname
-    
+    const currentUserName = req.user.login
+
     // check is new nickname not empty
     if (!newNickname) return res.sendStatus(406)
 
-    User.findOne({name: newNickname}, (err, ans) => {
+    const checkUserName = RegExp('^' + newNickname + '$', 'i')
+
+    User.findOne({name: checkUserName}, (err, ans) => {
+
         // check if error happened
         if (err) return res.sendStatus(500)
-        // check does user exist yet
-        if (ans) return res.sendStatus(406)
+
+        if (/\s/.test(newNickname)) return res.sendStatus(406)
+        if (!newNickname.trim()) return res.sendStatus(406)
+
+        // check if user found, but this is not the same user
+        if (ans) {
+            const isTheSameUser = RegExp('^' + ans.name + '$', 'i').test(currentUserName)
+            if (!isTheSameUser) return res.sendStatus(406)
+        }
 
         // searching user by it's current nickname and replacing it by new one
         User.findOneAndUpdate(
-            {name: req.user.login},
+            {name: currentUserName},
             {$set: {name: newNickname}},
-            {new:true},
+            {new: true},
             (err, ans) => {
+
                 // check if error happened
                 if (err) return res.sendStatus(500)
+
                 // generating new json web token for user
                 JWT.sign(
                     { login: newNickname },
@@ -129,12 +142,15 @@ apiRouter.patch('/changeNickname', authenticateToken, (req, res) => {
                     { algorithm: 'HS512' },
                     (err, token) => {
                         if(err) return res.sendStatus(500)
-                        return res.status(200).json({newJWTToken: token})
+                        res.status(200).json({newJWTToken: token})
                     }
                 )
+
             }
         )
+
     })
+
 })
 
 exports.apiRoutes = apiRouter
