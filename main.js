@@ -29,16 +29,16 @@ mongoose.connect(mongoURL, mongoSettings)
 app.post('/register', (req, res) => {
     const userName = req.body.login
     const checkUserName = RegExp('^' + userName + '$', 'i')
-    User.find({name:checkUserName}, (err, ans) => {
+    User.find({name:checkUserName}, (err, docs) => {
         if(err) return res.sendStatus(500)
-        if (ans.length!==0) {
+        if (docs.length!==0) {
             return res.sendStatus(208)
         }
         const passwordHash = bcrypt.hashSync(req.body.password, 10)
         const newUser = {
             name:userName,
             password:passwordHash,
-            posts:[{fileName:'example.jpg',name:'This is your first post'}]
+            posts:[{fileName:'example.jpg',name:'This is my first post!'}]
         }
         const user = new User(newUser)
         user.save()
@@ -50,10 +50,10 @@ app.post('/register', (req, res) => {
 app.post('/login', (req, res) => {
     const login = req.body.login
     const password = req.body.password
-    User.find({name:login}, (err, ans) => {
+    User.find({name:login}, (err, doc) => {
         if(err) return res.sendStatus(500)
-        if(ans.length === 0) return res.status(400).json({status: 'wrong password or login'})
-        let isPasswordCorrect = bcrypt.compareSync(password, ans[0].password)
+        if(doc.length === 0) return res.status(400).json({status: 'wrong password or login'})
+        let isPasswordCorrect = bcrypt.compareSync(password, doc[0].password)
         if(isPasswordCorrect) {
             JWT.sign({ login }, JWTSecretKey, { algorithm: 'HS512' }, (err, token) => {
                 if(err) return res.sendStatus(500)
@@ -70,21 +70,21 @@ app.get('/downloadPicture/:pictureName', (req, res) => {
     res.download(`${__dirname}/images/${pictureName}`)
 })
 
-// '/' endpoint responds index.html file
-// which is entrypoint to start page
+// the following endpoints respond index.html file
+// which is main file of the application
 app.get('/', (_, res) => {
     res.sendFile(path.resolve(__dirname, 'build', 'index.html'))
 })
 
-// '/publicPosts' endpoint responds index.html file
-// which is entrypoint to public posts page
 app.get('/publicPosts', (_, res) => {
     res.sendFile(path.resolve(__dirname, 'build', 'index.html'))
 })
 
-// '/userPosts/*' endpoint responds index.html file
-// which is entrypoint to user posts page
 app.get('/userPosts/*', (_, res) => {
+    res.sendFile(path.resolve(__dirname, 'build', 'index.html'))
+})
+
+app.get('/accountSettings', (_, res) => {
     res.sendFile(path.resolve(__dirname, 'build', 'index.html'))
 })
 
