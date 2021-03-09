@@ -1,4 +1,4 @@
 /node_modules
 /build
-/images/*
-!/images/example.jpg
+/pictures/*
+!/pictures/example.jpg

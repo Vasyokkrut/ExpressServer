@@ -28,46 +28,63 @@ mongoose.connect(mongoURL, mongoSettings)
 
 app.post('/register', (req, res) => {
     const userName = req.body.login
-    const checkUserName = RegExp('^' + userName + '$', 'i')
-    User.find({name:checkUserName}, (err, docs) => {
-        if(err) return res.sendStatus(500)
-        if (docs.length!==0) {
-            return res.sendStatus(208)
+    const regexUserName = RegExp('^' + userName + '$')
+
+    User.findOne(
+        {name: {$regex: regexUserName, $options: 'i'}},
+        (err, doc) => {
+            if (err) return res.sendStatus(500)
+            if (doc) return res.sendStatus(208)
+
+            bcrypt.hash(req.body.password, 10, (err, passwordHash) => {
+                if (err) return res.sendStatus(500)
+
+                const newUser = {
+                    name: userName,
+                    password: passwordHash,
+                    posts: [{pictureName: 'example.jpg', title: 'This is my first post!'}]
+                }
+                User.create(newUser, err => {
+                    if (err) return res.sendStatus(500)
+                    
+                    res.sendStatus(201)
+                })
+            })
         }
-        const passwordHash = bcrypt.hashSync(req.body.password, 10)
-        const newUser = {
-            name:userName,
-            password:passwordHash,
-            posts:[{fileName:'example.jpg',name:'This is my first post!'}]
-        }
-        const user = new User(newUser)
-        user.save()
-            .catch(() => res.sendStatus(500))
-            .then(() => res.sendStatus(201))
-    })
+    )
 })
 
 app.post('/login', (req, res) => {
-    const login = req.body.login
+    const userName = req.body.userName
     const password = req.body.password
-    User.find({name:login}, (err, doc) => {
-        if(err) return res.sendStatus(500)
-        if(doc.length === 0) return res.status(400).json({status: 'wrong password or login'})
-        let isPasswordCorrect = bcrypt.compareSync(password, doc[0].password)
-        if(isPasswordCorrect) {
-            JWT.sign({ login }, JWTSecretKey, { algorithm: 'HS512' }, (err, token) => {
-                if(err) return res.sendStatus(500)
-                res.status(200).json({status:'user found', JWTToken: token})
-            })
-        } else {
-            res.status(400).json({status: 'wrong password or login'})
-        }
+    
+    User.findOne({name: userName}, (err, doc) => {
+        if (err) return res.sendStatus(500)
+        if (!doc) return res.status(400).json({status: 'wrong password or login'})
+
+        bcrypt.compare(password, doc.password, (err, same) => {
+            if (err) return res.sendStatus(500)
+
+            if (same) {
+                JWT.sign(
+                    { userName },
+                    JWTSecretKey,
+                    { algorithm: 'HS512' },
+                    (err, token) => {
+                        if (err) return res.sendStatus(500)
+                        res.status(200).json({userJWT: token})
+                    }
+                )
+            } else {
+                res.sendStatus(400)
+            }
+        })
     })
 })
 
 app.get('/downloadPicture/:pictureName', (req, res) => {
     const pictureName = req.params.pictureName
-    res.download(`${__dirname}/images/${pictureName}`)
+    res.download(path.resolve(__dirname, 'pictures', pictureName))
 })
 
 // the following endpoints respond index.html file

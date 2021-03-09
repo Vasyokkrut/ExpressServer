@@ -4,13 +4,13 @@ const JWT = require('jsonwebtoken')
 
 const { User } = require('./models.js')
 const { JWTSecretKey } = require('./env.js')
-const { authenticateToken } = require('./middlewares.js')
+const { verifyJWT } = require('./middlewares.js')
 
 const accountSettingsRouter = express.Router()
 
-accountSettingsRouter.patch('/changeNickname', authenticateToken, (req, res) => {
+accountSettingsRouter.patch('/changeNickname', verifyJWT, (req, res) => {
     const newNickname = req.body.newNickname
-    const currentUserName = req.user.login
+    const currentUserName = req.user.userName
     const allowedSymbols = /^[A-Za-z0-9]+$/
 
     // new nickname could contain only letters and numbers
@@ -19,9 +19,9 @@ accountSettingsRouter.patch('/changeNickname', authenticateToken, (req, res) => 
     // check is new nickname contains any kind of spaces or endlines
     if (/\s/.test(newNickname)) return res.sendStatus(406)
 
-    const checkUserName = RegExp('^' + newNickname + '$', 'i')
+    const regexNickName = RegExp('^' + newNickname + '$')
 
-    User.findOne({name: checkUserName}, (err, doc) => {
+    User.findOne({name: {$regex: regexNickName, $options: 'i'}}, (err, doc) => {
 
         if (err) return res.sendStatus(500)
 
@@ -47,6 +47,7 @@ accountSettingsRouter.patch('/changeNickname', authenticateToken, (req, res) => 
                     { algorithm: 'HS512' },
                     (err, token) => {
                         if(err) return res.sendStatus(500)
+                        
                         res.status(200).json({newJWTToken: token})
                     }
                 )
@@ -58,10 +59,9 @@ accountSettingsRouter.patch('/changeNickname', authenticateToken, (req, res) => 
 
 })
 
-accountSettingsRouter.patch('/changePassword', authenticateToken, (req, res) => {
-
+accountSettingsRouter.patch('/changePassword', verifyJWT, (req, res) => {
     const newPassword = req.body.newPassword
-    const userName = req.user.login
+    const userName = req.user.userName
     const allowedSymbols = /^[A-Za-z0-9]+$/
 
     // new password could contain only letters and numbers
@@ -70,24 +70,25 @@ accountSettingsRouter.patch('/changePassword', authenticateToken, (req, res) => 
     // check is new password contains any kind of spaces or endlines
     if (/\s/.test(newPassword)) return res.sendStatus(406)
 
-    const passwordHash = bcrypt.hashSync(req.body.newPassword, 10)
+    
+    bcrypt.hash(req.body.newPassword, 10, (err, result) => {
+        if (err) return res.sendStatus(500)
 
-    User.findOneAndUpdate(
-        {name: userName},
-        {$set: {password: passwordHash}},
-        {new: true},
-        err => {
+        User.findOneAndUpdate(
+            {name: userName},
+            {$set: {password: result}},
+            {new: true},
+            err => {
+                if (err) return res.sendStatus(500)
 
-            if (err) return res.sendStatus(500)
-
-            res.sendStatus(200)
-
-        }
-    )
+                res.sendStatus(200)
+            }
+        )
+    })
 })
 
-accountSettingsRouter.delete('/deleteAccount', authenticateToken, (req, res) => {
-    User.findOneAndDelete({name: req.user.login}, err => {
+accountSettingsRouter.delete('/deleteAccount', verifyJWT, (req, res) => {
+    User.findOneAndDelete({name: req.user.userName}, err => {
         if (err) return res.sendStatus(500)
 
         res.sendStatus(200)

@@ -2,7 +2,11 @@ const JWT = require('jsonwebtoken')
 
 const { JWTSecretKey } = require('./env.js')
 
-function authenticateToken(req, res, next) {
+// this middleware verifies JWT
+// if token is valid it calls next() function
+// otherwise is responds with status 403
+// it also puts the data from token to req.user
+function verifyJWT(req, res, next) {
     const authHeader = req.headers.authorization
     const token = authHeader && authHeader.split(' ')[1]
     
@@ -15,4 +19,4 @@ function authenticateToken(req, res, next) {
     })
 }
 
-exports.authenticateToken = authenticateToken
+exports.verifyJWT = verifyJWT

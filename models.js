@@ -1,28 +1,28 @@
 const mongoose = require('mongoose')
 
-const UserScheme = {
-    name:String,
-    password:String,
-    posts:[
+const UserSchema = {
+    name: String,
+    password: String,
+    posts: [
         {
-            fileName:String,
-            name:String
+            pictureName: String,
+            title: String
         }
     ]
 }
 
-const PictureScheme = {
-    fileName:String,
-    name:String
+const PublicPostSchema = {
+    pictureName: String,
+    title: String
 }
 
 // creating schemas for models
-const mongoUserScheme = new mongoose.Schema(UserScheme, { versionKey: false })
-const mongoPictureScheme = new mongoose.Schema(PictureScheme, { versionKey: false })
+const mongoUserSchema = new mongoose.Schema(UserSchema)
+const mongoPubicPostSchema = new mongoose.Schema(PublicPostSchema)
 
 // creating models
-const User = mongoose.model('User', mongoUserScheme)
-const Picture = mongoose.model('Posts', mongoPictureScheme)
+const User = mongoose.model('user', mongoUserSchema)
+const PublicPost = mongoose.model('publicpost', mongoPubicPostSchema)
 
 exports.User = User
-exports.Picture = Picture
+exports.PublicPost = PublicPost
