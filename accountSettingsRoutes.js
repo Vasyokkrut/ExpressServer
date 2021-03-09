@@ -8,18 +8,18 @@ const { verifyJWT } = require('./middlewares.js')
 
 const accountSettingsRouter = express.Router()
 
-accountSettingsRouter.patch('/changeNickname', verifyJWT, (req, res) => {
-    const newNickname = req.body.newNickname
+accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
+    const newUserName = req.body.newUserName
     const currentUserName = req.user.userName
     const allowedSymbols = /^[A-Za-z0-9]+$/
 
     // new nickname could contain only letters and numbers
-    if (!allowedSymbols.test(newNickname)) return res.sendStatus(406)
+    if (!allowedSymbols.test(newUserName)) return res.sendStatus(406)
 
     // check is new nickname contains any kind of spaces or endlines
-    if (/\s/.test(newNickname)) return res.sendStatus(406)
+    if (/\s/.test(newUserName)) return res.sendStatus(406)
 
-    const regexNickName = RegExp('^' + newNickname + '$')
+    const regexNickName = RegExp('^' + newUserName + '$')
 
     User.findOne({name: {$regex: regexNickName, $options: 'i'}}, (err, doc) => {
 
@@ -34,7 +34,7 @@ accountSettingsRouter.patch('/changeNickname', verifyJWT, (req, res) => {
         // searching user by it's current nickname and replacing it by new one
         User.findOneAndUpdate(
             {name: currentUserName},
-            {$set: {name: newNickname}},
+            {$set: {name: newUserName}},
             {new: true},
             err => {
 
@@ -42,13 +42,13 @@ accountSettingsRouter.patch('/changeNickname', verifyJWT, (req, res) => {
 
                 // generating new json web token for user
                 JWT.sign(
-                    { login: newNickname },
+                    { userName: newUserName },
                     JWTSecretKey,
                     { algorithm: 'HS512' },
                     (err, token) => {
                         if(err) return res.sendStatus(500)
                         
-                        res.status(200).json({newJWTToken: token})
+                        res.status(200).json({newJWT: token})
                     }
                 )
 
