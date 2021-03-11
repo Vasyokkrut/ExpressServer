@@ -9,7 +9,7 @@ const { accountSettingsRouter } = require('./accountSettingsRoutes.js')
 const apiRouter = express.Router()
 apiRouter.use('/accountSettings', accountSettingsRouter)
 
-apiRouter.put('/uploadPublicPost' , async (req, res) => {
+apiRouter.put('/uploadPublicPost' , (req, res) => {
     const title = req.body.title
     const picture = req.files.picture
     const newPost = {pictureName: picture.md5 + picture.name, title: title}

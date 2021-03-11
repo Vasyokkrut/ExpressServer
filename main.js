@@ -4,6 +4,7 @@ const { mongoURL, mongoSettings } = require('./env.js')
 const { app } = require('./appRoot.js')
 
 // connecting to mongodb server
+console.log('Connecting to DB, starting server...')
 mongoose.connect(mongoURL, mongoSettings)
     .then(() => {
         console.log('DB connected')
@@ -17,6 +18,7 @@ mongoose.connect(mongoURL, mongoSettings)
 
 // properly disconnecting from database when server stopped
 function exitFromServer() {
+    console.log('Disconnecting from DB, stopping server...')
     mongoose.disconnect()
         .then(() => {
             console.log('Server stopped successfully')
