@@ -2,8 +2,8 @@ const FS = require('fs')
 const path = require('path')
 const express = require('express')
 
-const { PublicPost, User } = require('./models.js')
 const { verifyJWT } = require('./middlewares.js')
+const { PublicPost, User } = require('./models.js')
 const { accountSettingsRouter } = require('./accountSettingsRoutes.js')
 
 const apiRouter = express.Router()
@@ -40,7 +40,8 @@ apiRouter.put('/uploadPostForUser', verifyJWT, (req , res) => {
     User.findOneAndUpdate(
         {name: req.user.userName},
         {$push: {posts: newPost}},
-        {new: true})
+        {new: true}
+    )
         .then(doc => { // this doc is the user we saved post for
 
             // check if picture doesn't exist and saving it on local disk
@@ -66,6 +67,70 @@ apiRouter.put('/uploadPostForUser', verifyJWT, (req , res) => {
         .catch(() => res.sendStatus(500))
 })
 
+apiRouter.put('/uploadMusicForUser', verifyJWT, (req, res) => {
+    const title = req.body.title
+    const track = req.files.track
+    const newTrack = {fileName: track.md5 + track.name, title: title}
+
+    User.findOneAndUpdate(
+        {name: req.user.userName},
+        {$push: {music: newTrack}},
+        {new: true}
+    )
+        .then(doc => {
+            const trackPath = path.resolve(__dirname, 'music', newTrack.fileName)
+            if(!FS.existsSync(trackPath)) {
+                track.mv(
+                    trackPath,
+                    err => {
+                        if (err) res.sendStatus(500)
+
+                        // response to user with new track
+                        const lastItem = doc.music.length - 1
+                        res.status(200).json(doc.music[lastItem])
+                    }
+                )
+            } else {
+                // response to user with new track
+                const lastItem = doc.posts.length - 1
+                res.status(200).json(doc.music[lastItem])
+            }
+        })
+        .catch(() => res.sendStatus(500))
+})
+
+apiRouter.get('/getUserMusic/:username', (req, res) => {
+    const userName = req.params.username
+
+    User.findOne({name: userName}, (err, doc) => {
+        if (err) return res.sendStatus(500)
+        if (!doc) return res.sendStatus(404)
+
+        res.status(200).json({userMusic: doc.music})
+    })
+})
+
+apiRouter.get('/getUserTrack/:username/:trackid', (req, res) => {
+    const trackID = req.params.trackid
+    const userName = req.params.username
+
+    User.findOne({name: userName}, (err, doc) => {
+        if (err) return res.sendStatus(500)
+        if (!doc) return res.sendStatus(404)
+
+        const track = doc.music.find(el => el._id.toString('hex') === trackID)
+
+        if (!track) return res.sendStatus(404)
+
+        if(FS.existsSync(path.resolve(__dirname, 'music', track.fileName))) {
+            res.sendFile(path.resolve(__dirname, 'music', track.fileName))
+        } else {
+            res.sendStatus(404)
+        }
+    })
+
+})
+
 apiRouter.get('/getPublicPosts', (_req, res) => {
     PublicPost.find({}, (err, docs) => {
         if (err) return res.sendStatus(500)
@@ -78,7 +143,7 @@ apiRouter.get('/getUserInfo/:user', (req, res) => {
 
     User.findOne({name: {$regex: userName, $options: 'i'}}, (err, doc) => {
         if (err) return res.sendStatus(500)
-        if (doc === null) return res.sendStatus(404)
+        if (!doc) return res.sendStatus(404)
 
         res.status(200).json({userPosts: doc.posts, userName: doc.name})
     })
@@ -113,7 +178,7 @@ apiRouter.delete('/deleteUserPost', verifyJWT, (req, res) => {
     User.findOneAndUpdate(
         {name: req.user.userName},
         {$pull: {posts: {_id: req.body.delete}}},
-        {new:true},
+        {new: true},
         (err, doc) => {
             if (err) return res.sendStatus(500)
             res.status(200).json({deleted: true, id: doc})

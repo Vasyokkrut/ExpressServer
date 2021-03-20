@@ -1,4 +1,5 @@
 /node_modules
 /build
+/music/*
 /pictures/*
 !/pictures/example.jpg

@@ -36,6 +36,7 @@ app.post('/register', (req, res) => {
                 const newUser = {
                     name: userName,
                     password: passwordHash,
+                    music: [],
                     posts: [{pictureName: 'example.jpg', title: 'This is my first post!'}]
                 }
                 User.create(newUser, err => {
@@ -54,7 +55,7 @@ app.post('/login', (req, res) => {
     
     User.findOne({name: userName}, (err, doc) => {
         if (err) return res.sendStatus(500)
-        if (!doc) return res.status(400).json({status: 'wrong password or login'})
+        if (!doc) return res.sendStatus(404)
 
         bcrypt.compare(password, doc.password, (err, same) => {
             if (err) return res.sendStatus(500)

@@ -13,7 +13,7 @@ function verifyJWT(req, res, next) {
     if (!token) return res.sendStatus(401)
 
     JWT.verify(token, JWTSecretKey, (err, user) => {
-        if(err) return res.sendStatus(403)
+        if (err) return res.sendStatus(403)
         req.user = user
         next()
     })

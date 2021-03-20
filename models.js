@@ -5,24 +5,30 @@ const UserSchema = {
     password: String,
     posts: [
         {
-            pictureName: String,
-            title: String
+            title: String,
+            pictureName: String
+        }
+    ],
+    music: [
+        {
+            title: String,
+            fileName: String
         }
     ]
 }
 
 const PublicPostSchema = {
-    pictureName: String,
-    title: String
+    title: String,
+    pictureName: String
 }
 
 // creating schemas for models
 const mongoUserSchema = new mongoose.Schema(UserSchema)
-const mongoPubicPostSchema = new mongoose.Schema(PublicPostSchema)
+const mongoPublicPostSchema = new mongoose.Schema(PublicPostSchema)
 
 // creating models
 const User = mongoose.model('user', mongoUserSchema)
-const PublicPost = mongoose.model('publicpost', mongoPubicPostSchema)
+const PublicPost = mongoose.model('publicpost', mongoPublicPostSchema)
 
 exports.User = User
 exports.PublicPost = PublicPost
