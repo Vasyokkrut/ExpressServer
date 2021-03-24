@@ -1,5 +1,6 @@
 /node_modules
 /build
 /music/*
+!/music/keeptrack.js
 /pictures/*
 !/pictures/example.jpg
