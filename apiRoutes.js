@@ -83,7 +83,7 @@ apiRouter.put('/uploadMusicForUser', verifyJWT, (req, res) => {
                 track.mv(
                     trackPath,
                     err => {
-                        if (err) res.sendStatus(500)
+                        if (err) return res.sendStatus(500)
 
                         // response to user with new track
                         const lastItem = doc.music.length - 1
@@ -92,11 +92,24 @@ apiRouter.put('/uploadMusicForUser', verifyJWT, (req, res) => {
                 )
             } else {
                 // response to user with new track
-                const lastItem = doc.posts.length - 1
+                const lastItem = doc.music.length - 1
                 res.status(200).json(doc.music[lastItem])
             }
         })
         .catch(() => res.sendStatus(500))
+})
+
+apiRouter.delete('/deleteUserTrack', verifyJWT, (req, res) => {
+    User.findOneAndUpdate(
+        {name: req.user.userName},
+        {$pull: {music: {_id: req.body.trackID}}},
+        {new: true},
+        (err, doc) => {
+            if (err) console.log('error happened')
+            if (err) return res.sendStatus(500)
+            res.sendStatus(200)
+        }
+    )
 })
 
 apiRouter.get('/getUserMusic/:username', (req, res) => {
