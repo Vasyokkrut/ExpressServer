@@ -4,9 +4,11 @@ const express = require('express')
 
 const { verifyJWT } = require('./middlewares.js')
 const { PublicPost, User } = require('./models.js')
+const { musicRouter } = require('./musicRoutes.js')
 const { accountSettingsRouter } = require('./accountSettingsRoutes.js')
 
 const apiRouter = express.Router()
+apiRouter.use('/music', musicRouter)
 apiRouter.use('/accountSettings', accountSettingsRouter)
 
 apiRouter.put('/uploadPublicPost' , (req, res) => {
@@ -65,83 +67,6 @@ apiRouter.put('/uploadPostForUser', verifyJWT, (req , res) => {
             }
         })
         .catch(() => res.sendStatus(500))
-})
-
-apiRouter.put('/uploadMusicForUser', verifyJWT, (req, res) => {
-    const title = req.body.title
-    const track = req.files.track
-    const newTrack = {fileName: track.md5 + track.name, title: title}
-
-    User.findOneAndUpdate(
-        {name: req.user.userName},
-        {$push: {music: newTrack}},
-        {new: true}
-    )
-        .then(doc => {
-            const trackPath = path.resolve(__dirname, 'music', newTrack.fileName)
-            if(!FS.existsSync(trackPath)) {
-                track.mv(
-                    trackPath,
-                    err => {
-                        if (err) return res.sendStatus(500)
-
-                        // response to user with new track
-                        const lastItem = doc.music.length - 1
-                        res.status(200).json(doc.music[lastItem])
-                    }
-                )
-            } else {
-                // response to user with new track
-                const lastItem = doc.music.length - 1
-                res.status(200).json(doc.music[lastItem])
-            }
-        })
-        .catch(() => res.sendStatus(500))
-})
-
-apiRouter.delete('/deleteUserTrack', verifyJWT, (req, res) => {
-    User.findOneAndUpdate(
-        {name: req.user.userName},
-        {$pull: {music: {_id: req.body.trackID}}},
-        {new: true},
-        (err, doc) => {
-            if (err) console.log('error happened')
-            if (err) return res.sendStatus(500)
-            res.sendStatus(200)
-        }
-    )
-})
-
-apiRouter.get('/getUserMusic/:username', (req, res) => {
-    const userName = req.params.username
-
-    User.findOne({name: userName}, (err, doc) => {
-        if (err) return res.sendStatus(500)
-        if (!doc) return res.sendStatus(404)
-
-        res.status(200).json({userMusic: doc.music})
-    })
-})
-
-apiRouter.get('/getUserTrack/:username/:trackid', (req, res) => {
-    const trackID = req.params.trackid
-    const userName = req.params.username
-
-    User.findOne({name: userName}, (err, doc) => {
-        if (err) return res.sendStatus(500)
-        if (!doc) return res.sendStatus(404)
-
-        const track = doc.music.find(el => el._id.toString('hex') === trackID)
-
-        if (!track) return res.sendStatus(404)
-
-        if(FS.existsSync(path.resolve(__dirname, 'music', track.fileName))) {
-            res.sendFile(path.resolve(__dirname, 'music', track.fileName))
-        } else {
-            res.sendStatus(404)
-        }
-    })
-
 })
 
 apiRouter.get('/getPublicPosts', (_req, res) => {
