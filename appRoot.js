@@ -84,20 +84,25 @@ app.get('/downloadPicture/:pictureName', (req, res) => {
 
 // the following endpoints respond index.html file
 // which is main file of the application
+const indexFile = path.resolve(__dirname, 'build', 'index.html')
 app.get('/', (_, res) => {
-    res.sendFile(path.resolve(__dirname, 'build', 'index.html'))
+    res.sendFile(indexFile)
 })
 
 app.get('/publicPosts', (_, res) => {
-    res.sendFile(path.resolve(__dirname, 'build', 'index.html'))
+    res.sendFile(indexFile)
+})
+
+app.get('/myMusic', (_, res) => {
+    res.sendFile(indexFile)
 })
 
 app.get('/userPosts/*', (_, res) => {
-    res.sendFile(path.resolve(__dirname, 'build', 'index.html'))
+    res.sendFile(indexFile)
 })
 
 app.get('/accountSettings', (_, res) => {
-    res.sendFile(path.resolve(__dirname, 'build', 'index.html'))
+    res.sendFile(indexFile)
 })
 
 exports.app = app
