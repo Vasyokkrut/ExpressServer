@@ -1,14 +1,22 @@
+require('dotenv').config()
 const mongoose = require('mongoose')
 
-const { mongoURL, mongoSettings } = require('./env.js')
 const { app } = require('./appRoot.js')
+
+const SERVERPORT = +process.env.SERVERPORT
+const MONGOURL = process.env.MONGOURL
+const mongoSettings = {
+    useNewUrlParser: true,
+    useFindAndModify:false,
+    useUnifiedTopology: true
+}
 
 // connecting to mongodb server
 console.log('Connecting to DB, starting server...')
-mongoose.connect(mongoURL, mongoSettings)
+mongoose.connect(MONGOURL, mongoSettings)
     .then(() => {
         console.log('DB connected')
-        app.listen(5000, () => console.log('Server started'))
+        app.listen(SERVERPORT, () => console.log('Server started'))
     })
     .catch(error => {
         console.log('Cannot connect to DB. Error:', error.message)

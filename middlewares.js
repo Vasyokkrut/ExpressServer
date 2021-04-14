@@ -1,6 +1,6 @@
 const JWT = require('jsonwebtoken')
 
-const { JWTSecretKey } = require('./env.js')
+const JWTSecretKey = process.env.JWTSECRETKEY
 
 // this middleware verifies JWT
 // if token is valid it calls next() function

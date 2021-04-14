@@ -6,9 +6,9 @@ const JWT = require('jsonwebtoken')
 const fileUpload = require('express-fileupload')
 
 const { User } = require('./models.js')
-const { JWTSecretKey } = require('./env.js')
 const { apiRoutes } = require('./apiRoutes.js')
 
+const JWTSecretKey = process.env.JWTSECRETKEY
 // creating main application object
 // and applying middlewares
 const app = express()

@@ -3,9 +3,9 @@ const express = require('express')
 const JWT = require('jsonwebtoken')
 
 const { User } = require('./models.js')
-const { JWTSecretKey } = require('./env.js')
 const { verifyJWT } = require('./middlewares.js')
 
+const JWTSecretKey = process.env.JWTSECRETKEY
 const accountSettingsRouter = express.Router()
 
 accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
