@@ -22,6 +22,10 @@ app.use(express.static(path.resolve(__dirname, 'build')))
 
 app.post('/register', (req, res) => {
     const userName = req.body.login
+
+    const allowedSymbols = /^[A-Za-z0-9]+$/
+    if (!allowedSymbols.test(userName)) return res.sendStatus(406)
+
     const regexUserName = RegExp('^' + userName + '$')
 
     User.findOne(
@@ -59,20 +63,17 @@ app.post('/login', (req, res) => {
 
         bcrypt.compare(password, doc.password, (err, same) => {
             if (err) return res.sendStatus(500)
+            if (!same) return res.sendStatus(400)
 
-            if (same) {
-                JWT.sign(
-                    { userName },
-                    JWTSecretKey,
-                    { algorithm: 'HS512' },
-                    (err, token) => {
-                        if (err) return res.sendStatus(500)
-                        res.status(200).json({userJWT: token})
-                    }
-                )
-            } else {
-                res.sendStatus(400)
-            }
+            JWT.sign(
+                { userName },
+                JWTSecretKey,
+                { algorithm: 'HS512' },
+                (err, token) => {
+                    if (err) return res.sendStatus(500)
+                    res.status(200).json({userJWT: token})
+                }
+            )
         })
     })
 })
