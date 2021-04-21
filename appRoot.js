@@ -1,5 +1,4 @@
 const path = require('path')
-const cors = require('cors')
 const bcrypt = require('bcrypt')
 const express = require('express')
 const JWT = require('jsonwebtoken')
@@ -9,11 +8,11 @@ const { User } = require('./models.js')
 const { apiRoutes } = require('./apiRoutes.js')
 
 const JWTSecretKey = process.env.JWTSECRETKEY
+
 // creating main application object
 // and applying middlewares
 const app = express()
 app.disable('x-powered-by')
-app.use(cors())
 app.use(fileUpload())
 app.use(express.text())
 app.use(express.json())
