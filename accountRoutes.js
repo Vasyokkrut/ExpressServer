@@ -86,6 +86,7 @@ accountRouter.post('/login', (req, res) => {
                                 'accessToken',
                                 'Bearer ' + accessToken,
                                 {
+                                    path: '/api',
                                     secure: true,
                                     httpOnly: true,
                                     sameSite: 'strict',
@@ -133,6 +134,7 @@ accountRouter.get('/getNewAccessToken', (req, res) => {
                     'accessToken',
                     'Bearer ' + newAccessToken,
                     {
+                        path: '/api',
                         secure: true,
                         httpOnly: true,
                         sameSite: 'strict',
@@ -143,6 +145,12 @@ accountRouter.get('/getNewAccessToken', (req, res) => {
             }
         )
     })
+})
+
+accountRouter.get('/logout', (req, res) => {
+    res.clearCookie('accessToken', { path: '/api' })
+    res.clearCookie('refreshToken', { path: '/api/account/getNewAccessToken' })
+    res.sendStatus(200)
 })
 
 exports.accountRouter = accountRouter
