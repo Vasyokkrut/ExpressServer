@@ -68,6 +68,7 @@ accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
                                     'accessToken',
                                     'Bearer ' + newAccessToken,
                                     {
+                                        path: '/api',
                                         secure: true,
                                         httpOnly: true,
                                         sameSite: 'strict',
