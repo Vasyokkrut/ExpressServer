@@ -131,6 +131,8 @@ accountSettingsRouter.delete('/deleteAccount', verifyJWT, (req, res) => {
     User.findOneAndDelete({name: req.user.userName}, err => {
         if (err) return res.sendStatus(500)
 
+        res.clearCookie('accessToken', { path: '/api' })
+        res.clearCookie('refreshToken', { path: '/api/account/getNewAccessToken' })
         res.sendStatus(200)
     })
 })
