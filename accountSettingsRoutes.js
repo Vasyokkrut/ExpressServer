@@ -1,3 +1,4 @@
+const ms = require('ms')
 const bcrypt = require('bcrypt')
 const express = require('express')
 const JWT = require('jsonwebtoken')
@@ -5,7 +6,12 @@ const JWT = require('jsonwebtoken')
 const { User } = require('./models.js')
 const { verifyJWT } = require('./middlewares.js')
 
-const JWTSecretKey = process.env.JWTSECRETKEY
+const accessSecretKey = process.env.ACCESSSECRETKEY
+const accessTokenLifetime = process.env.ACCESSTOKENLIFETIME
+const accessCookieLifetime = ms(accessTokenLifetime)
+const refreshSecretKey = process.env.REFRESHSECRETKEY
+const refreshTokenLifetime = process.env.REFRESHTOKENLIFETIME
+const refreshCookieLifetime = ms(refreshTokenLifetime)
 const accountSettingsRouter = express.Router()
 
 accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
@@ -13,15 +19,18 @@ accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
     const currentUserName = req.user.userName
     const allowedSymbols = /^[A-Za-z0-9]+$/
 
-    // new nickname could contain only letters and numbers
+    // new username cannot be empty
+    if (!newUserName) return res.sendStatus(406)
+
+    // new username could contain only letters and numbers
     if (!allowedSymbols.test(newUserName)) return res.sendStatus(406)
 
-    // check is new nickname contains any kind of spaces or endlines
+    // check is new username contains any kind of spaces or endlines
     if (/\s/.test(newUserName)) return res.sendStatus(406)
 
-    const regexNickName = RegExp('^' + newUserName + '$')
+    const regexUserName = RegExp('^' + newUserName + '$', 'i')
 
-    User.findOne({name: {$regex: regexNickName, $options: 'i'}}, (err, doc) => {
+    User.findOne({name: regexUserName}, (err, doc) => {
 
         if (err) return res.sendStatus(500)
 
@@ -31,7 +40,7 @@ accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
             if (!isTheSameUser) return res.status(200).json({userExists: true})
         }
 
-        // searching user by it's current nickname and replacing it by new one
+        // searching user by it's current username and replacing it by new one
         User.findOneAndUpdate(
             {name: currentUserName},
             {$set: {name: newUserName}},
@@ -43,26 +52,56 @@ accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
                 // generating new json web token for user
                 JWT.sign(
                     { userName: newUserName },
-                    JWTSecretKey,
-                    { algorithm: 'HS512' },
-                    (err, token) => {
-                        if(err) return res.sendStatus(500)
+                    accessSecretKey,
+                    { algorithm: 'HS256', expiresIn: accessTokenLifetime },
+                    (err, newAccessToken) => {
+                        if (err) return res.sendStatus(500)
                         
-                        res.status(200).json({newJWT: token})
+                        JWT.sign(
+                            { userName: newUserName },
+                            refreshSecretKey,
+                            { algorithm: 'HS512', expiresIn: refreshTokenLifetime },
+                            (err, newRefreshToken) => {
+                                if (err) return res.sendStatus(500)
+
+                                res.cookie(
+                                    'accessToken',
+                                    'Bearer ' + newAccessToken,
+                                    {
+                                        secure: true,
+                                        httpOnly: true,
+                                        sameSite: 'strict',
+                                        maxAge: accessCookieLifetime
+                                    }
+                                )
+                                res.cookie(
+                                    'refreshToken',
+                                    'Bearer ' + newRefreshToken,
+                                    {
+                                        secure: true,
+                                        httpOnly: true,
+                                        sameSite: 'strict',
+                                        maxAge: refreshCookieLifetime,
+                                        path: '/api/account/getNewAccessToken'
+                                    }
+                                )
+                                res.sendStatus(200)
+                            }
+                        )
                     }
                 )
-
             }
         )
-
     })
-
 })
 
 accountSettingsRouter.patch('/changePassword', verifyJWT, (req, res) => {
     const newPassword = req.body.newPassword
     const userName = req.user.userName
     const allowedSymbols = /^[A-Za-z0-9]+$/
+
+    // new password cannot be empty
+    if (!newPassword) return res.sendStatus(406)
 
     // new password could contain only letters and numbers
     if (!allowedSymbols.test(newPassword)) return res.sendStatus(406)

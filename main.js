@@ -1,4 +1,11 @@
 require('dotenv').config()
+if (!process.env.MONGOURL) throw new Error('MONGOURL env variable doesn\'t exist')
+if (!process.env.SERVERPORT) throw new Error('SERVERPORT env variable doesn\'t exist')
+if (!process.env.ACCESSSECRETKEY) throw new Error('ACCESSSECRETKEY env variable doesn\'t exist')
+if (!process.env.REFRESHSECRETKEY) throw new Error('REFRESHSECRETKEY env variable doesn\'t exist')
+if (!process.env.ACCESSTOKENLIFETIME) throw new Error('ACCESSTOKENLIFETIME env variable doesn\'t exist')
+if (!process.env.REFRESHTOKENLIFETIME) throw new Error('REFRESHTOKENLIFETIME env variable doesn\'t exist')
+
 const mongoose = require('mongoose')
 
 const { app } = require('./appRoot.js')

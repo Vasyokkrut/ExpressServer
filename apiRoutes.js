@@ -3,13 +3,13 @@ const path = require('path')
 const express = require('express')
 
 const { verifyJWT } = require('./middlewares.js')
-const { PublicPost, User } = require('./models.js')
 const { musicRouter } = require('./musicRoutes.js')
-const { accountSettingsRouter } = require('./accountSettingsRoutes.js')
+const { PublicPost, User } = require('./models.js')
+const { accountRouter } = require('./accountRoutes.js')
 
 const apiRouter = express.Router()
 apiRouter.use('/music', musicRouter)
-apiRouter.use('/accountSettings', accountSettingsRouter)
+apiRouter.use('/account', accountRouter)
 
 apiRouter.put('/uploadPublicPost' , (req, res) => {
     const title = req.body.title
@@ -119,9 +119,14 @@ apiRouter.delete('/deleteUserPost', verifyJWT, (req, res) => {
         {new: true},
         (err, doc) => {
             if (err) return res.sendStatus(500)
-            res.status(200).json({deleted: true, id: doc})
+            res.sendStatus(200)
         }
     )
+})
+
+apiRouter.get('/downloadPicture/:pictureName', (req, res) => {
+    const pictureName = req.params.pictureName
+    res.download(path.resolve(__dirname, 'pictures', pictureName))
 })
 
 exports.apiRoutes = apiRouter
