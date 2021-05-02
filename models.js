@@ -5,6 +5,7 @@ const UserSchema = {
     password: String,
     posts: [
         {
+            text: String,
             title: String,
             pictureName: String
         }
@@ -18,6 +19,7 @@ const UserSchema = {
 }
 
 const PublicPostSchema = {
+    text: String,
     title: String,
     pictureName: String
 }

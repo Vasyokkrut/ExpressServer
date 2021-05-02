@@ -12,9 +12,14 @@ apiRouter.use('/music', musicRouter)
 apiRouter.use('/account', accountRouter)
 
 apiRouter.put('/uploadPublicPost' , (req, res) => {
+    const text = req.body.text
     const title = req.body.title
     const picture = req.files.picture
-    const newPost = {pictureName: picture.md5 + picture.name, title: title}
+    const newPost = {
+        text: text,
+        title: title,
+        pictureName: picture.md5 + picture.name
+    }
 
     PublicPost.create(newPost, (err, post) => {
         if (err) return res.sendStatus(500)
@@ -34,10 +39,14 @@ apiRouter.put('/uploadPublicPost' , (req, res) => {
 })
 
 apiRouter.put('/uploadPostForUser', verifyJWT, (req , res) => {
+    const text = req.body.text
     const title = req.body.title
     const picture = req.files.picture
-    const newPost = {pictureName: picture.md5 + picture.name, title: title}
-
+    const newPost = {
+        text: text,
+        title: title,
+        pictureName: picture.md5 + picture.name
+    }
     
     User.findOneAndUpdate(
         {name: req.user.userName},
@@ -77,9 +86,9 @@ apiRouter.get('/getPublicPosts', (_req, res) => {
 })
 
 apiRouter.get('/getUserInfo/:user', (req, res) => {
-    const userName = RegExp('^' + req.params.user + '$')
+    const userName = RegExp('^' + req.params.user + '$', 'i')
 
-    User.findOne({name: {$regex: userName, $options: 'i'}}, (err, doc) => {
+    User.findOne({name: userName}, (err, doc) => {
         if (err) return res.sendStatus(500)
         if (!doc) return res.sendStatus(404)
 
@@ -97,9 +106,9 @@ apiRouter.get('/getPublicPicture/:id', (req, res) => {
 })
 
 apiRouter.get('/getUserPicture/:username/:id', (req, res) => {
-    const userName = RegExp('^' + req.params.username + '$')
+    const userName = RegExp('^' + req.params.username + '$', 'i')
 
-    User.findOne({name: {$regex: userName, $options: 'i'}}, (err, doc) => {
+    User.findOne({name: userName}, (err, doc) => {
         if (err) return res.sendStatus(500)
         if (!doc) return res.sendStatus(400)
         

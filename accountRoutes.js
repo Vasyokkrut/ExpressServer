@@ -26,10 +26,10 @@ accountRouter.post('/register', (req, res) => {
     if (!allowedSymbols.test(userName)) return res.sendStatus(406)
     if (!allowedSymbols.test(password)) return res.sendStatus(406)
 
-    const regexUserName = RegExp('^' + userName + '$')
+    const regexUserName = RegExp('^' + userName + '$', 'i')
 
     User.findOne(
-        {name: {$regex: regexUserName, $options: 'i'}},
+        {name: regexUserName},
         (err, doc) => {
             if (err) return res.sendStatus(500)
             if (doc) return res.sendStatus(208)
@@ -41,7 +41,11 @@ accountRouter.post('/register', (req, res) => {
                     name: userName,
                     password: passwordHash,
                     music: [],
-                    posts: [{pictureName: 'example.jpg', title: 'This is my first post!'}]
+                    posts: [{
+                        text: 'Hello world!',
+                        title: 'This is my first post!',
+                        pictureName: 'example.jpg'
+                    }]
                 }
                 User.create(newUser, err => {
                     if (err) return res.sendStatus(500)
