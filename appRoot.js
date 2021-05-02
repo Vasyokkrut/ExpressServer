@@ -8,10 +8,12 @@ const { apiRoutes } = require('./apiRoutes.js')
 // creating main application object
 // and applying middlewares
 const app = express()
+if (process.env.NODE_ENV !== 'production') {
+    app.use((req, res, next) => setTimeout(next, 100))
+}
 app.disable('x-powered-by')
 app.use(fileUpload())
 app.use(cookieParser())
-app.use(express.text())
 app.use(express.json())
 app.use('/api', apiRoutes)
 app.use(express.static(path.resolve(__dirname, 'build')))
