@@ -1,10 +1,22 @@
-require('dotenv').config()
-if (!process.env.MONGOURL) throw new Error('MONGOURL env variable doesn\'t exist')
-if (!process.env.SERVERPORT) throw new Error('SERVERPORT env variable doesn\'t exist')
-if (!process.env.ACCESSSECRETKEY) throw new Error('ACCESSSECRETKEY env variable doesn\'t exist')
-if (!process.env.REFRESHSECRETKEY) throw new Error('REFRESHSECRETKEY env variable doesn\'t exist')
-if (!process.env.ACCESSTOKENLIFETIME) throw new Error('ACCESSTOKENLIFETIME env variable doesn\'t exist')
-if (!process.env.REFRESHTOKENLIFETIME) throw new Error('REFRESHTOKENLIFETIME env variable doesn\'t exist')
+if (process.env.NODE_ENV !== 'production') require('dotenv').config()
+
+if (process.env.NODE_ENV) {
+    if (process.env.NODE_ENV === 'production') {
+        console.log('server is starting in production mode')
+    }
+    if (process.env.NODE_ENV === 'development') {
+        console.log('server is starting in development mode')
+    }
+} else {
+    console.log('NODE_ENV is unset, dont forget to set it in production')
+}
+
+if (!process.env.MONGOURL) throw new Error('MONGOURL env variable is unset')
+if (!process.env.SERVERPORT) throw new Error('SERVERPORT env variable is unset')
+if (!process.env.ACCESSSECRETKEY) throw new Error('ACCESSSECRETKEY env variable is unset')
+if (!process.env.REFRESHSECRETKEY) throw new Error('REFRESHSECRETKEY env variable is unset')
+if (!process.env.ACCESSTOKENLIFETIME) throw new Error('ACCESSTOKENLIFETIME env variable is unset')
+if (!process.env.REFRESHTOKENLIFETIME) throw new Error('REFRESHTOKENLIFETIME env variable is unset')
 
 const mongoose = require('mongoose')
 
@@ -19,10 +31,10 @@ const mongoSettings = {
 }
 
 // connecting to mongodb server
-console.log('Connecting to DB, starting server...')
+console.log('Connecting to DB...')
 mongoose.connect(MONGOURL, mongoSettings)
     .then(() => {
-        console.log('DB connected')
+        console.log('DB connected, starting server...')
         app.listen(SERVERPORT, () => console.log('Server started'))
     })
     .catch(error => {
