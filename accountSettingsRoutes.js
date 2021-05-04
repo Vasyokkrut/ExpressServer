@@ -15,11 +15,13 @@ const refreshCookieLifetime = ms(refreshTokenLifetime)
 const accountSettingsRouter = express.Router()
 
 accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
+    const password = req.body.password
     const newUserName = req.body.newUserName
     const currentUserName = req.user.userName
     const allowedSymbols = /^[A-Za-z0-9]+$/
 
-    // new username cannot be empty
+    // current password and new username cannot be empty
+    if (!password) return res.sendStatus(406)
     if (!newUserName) return res.sendStatus(406)
 
     // new username could contain only letters and numbers
@@ -40,100 +42,140 @@ accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
             if (!isTheSameUser) return res.status(200).json({userExists: true})
         }
 
-        // searching user by it's current username and replacing it by new one
-        User.findOneAndUpdate(
-            {name: currentUserName},
-            {$set: {name: newUserName}},
-            {new: true},
-            err => {
+        // searching user by it's current username
+        User.findOne({name: currentUserName}, (err, doc) => {
+            if (err) return res.sendStatus(500)
+            if (!doc) return res.sendStatus(404)
 
+            // confirm password
+            bcrypt.compare(password, doc.password, (err, same) => {
                 if (err) return res.sendStatus(500)
+                if (!same) return res.sendStatus(400)
 
-                // generating new json web token for user
-                JWT.sign(
-                    { userName: newUserName },
-                    accessSecretKey,
-                    { algorithm: 'HS256', expiresIn: accessTokenLifetime },
-                    (err, newAccessToken) => {
+                // if password has been confirmed, update username
+                User.findOneAndUpdate(
+                    {name: currentUserName},
+                    {$set: {name: newUserName}},
+                    {new: true},
+                    (err, doc) => {
                         if (err) return res.sendStatus(500)
-                        
+        
+                        // generating new access jwt for user
                         JWT.sign(
                             { userName: newUserName },
-                            refreshSecretKey,
-                            { algorithm: 'HS512', expiresIn: refreshTokenLifetime },
-                            (err, newRefreshToken) => {
+                            accessSecretKey,
+                            { algorithm: 'HS256', expiresIn: accessTokenLifetime },
+                            (err, newAccessToken) => {
                                 if (err) return res.sendStatus(500)
-
-                                res.cookie(
-                                    'accessToken',
-                                    'Bearer ' + newAccessToken,
-                                    {
-                                        path: '/api',
-                                        secure: true,
-                                        httpOnly: true,
-                                        sameSite: 'strict',
-                                        maxAge: accessCookieLifetime
+                                
+                                // generating new refresh jwt for user
+                                JWT.sign(
+                                    { userName: newUserName },
+                                    refreshSecretKey,
+                                    { algorithm: 'HS512', expiresIn: refreshTokenLifetime },
+                                    (err, newRefreshToken) => {
+                                        if (err) return res.sendStatus(500)
+        
+                                        // set new tokens to cookies
+                                        res.cookie(
+                                            'accessToken',
+                                            'Bearer ' + newAccessToken,
+                                            {
+                                                path: '/api',
+                                                secure: true,
+                                                httpOnly: true,
+                                                sameSite: 'strict',
+                                                maxAge: accessCookieLifetime
+                                            }
+                                        )
+                                        res.cookie(
+                                            'refreshToken',
+                                            'Bearer ' + newRefreshToken,
+                                            {
+                                                secure: true,
+                                                httpOnly: true,
+                                                sameSite: 'strict',
+                                                maxAge: refreshCookieLifetime,
+                                                path: '/api/account/getNewAccessToken'
+                                            }
+                                        )
+                                        res.sendStatus(200)
                                     }
                                 )
-                                res.cookie(
-                                    'refreshToken',
-                                    'Bearer ' + newRefreshToken,
-                                    {
-                                        secure: true,
-                                        httpOnly: true,
-                                        sameSite: 'strict',
-                                        maxAge: refreshCookieLifetime,
-                                        path: '/api/account/getNewAccessToken'
-                                    }
-                                )
-                                res.sendStatus(200)
                             }
                         )
                     }
                 )
-            }
-        )
+            })
+        })
     })
 })
 
 accountSettingsRouter.patch('/changePassword', verifyJWT, (req, res) => {
+    const oldPassword = req.body.oldPassword
     const newPassword = req.body.newPassword
     const userName = req.user.userName
     const allowedSymbols = /^[A-Za-z0-9]+$/
 
-    // new password cannot be empty
+    // old password and new password cannot be empty
+    if (!oldPassword) return res.sendStatus(406)
     if (!newPassword) return res.sendStatus(406)
 
     // new password could contain only letters and numbers
     if (!allowedSymbols.test(newPassword)) return res.sendStatus(406)
 
-    // check is new password contains any kind of spaces or endlines
-    if (/\s/.test(newPassword)) return res.sendStatus(406)
-
-    
-    bcrypt.hash(req.body.newPassword, 10, (err, result) => {
+    // find user in DB to compare passwords
+    User.findOne({name: userName}, (err, doc) => {
         if (err) return res.sendStatus(500)
-
-        User.findOneAndUpdate(
-            {name: userName},
-            {$set: {password: result}},
-            {new: true},
-            err => {
+        
+        // comparing old password entered by user on website
+        // with current password in DB
+        bcrypt.compare(oldPassword, doc.password, (err, same) => {
+            if (err) return res.sendStatus(500)
+            if (!same) return res.sendStatus(400)
+            
+            // if current password confirmed, hash new password
+            bcrypt.hash(newPassword, 10, (err, result) => {
                 if (err) return res.sendStatus(500)
-
-                res.sendStatus(200)
-            }
-        )
+                
+                // find user and update password hash
+                User.findOneAndUpdate(
+                    {name: userName},
+                    {$set: {password: result}},
+                    {new: true},
+                    err => {
+                        if (err) return res.sendStatus(500)
+        
+                        res.sendStatus(200)
+                    }
+                )
+            })
+        })
     })
 })
 
 accountSettingsRouter.delete('/deleteAccount', verifyJWT, (req, res) => {
-    User.findOneAndDelete({name: req.user.userName}, err => {
+    const userName = req.user.userName
+    const password = req.body.password
+
+    // password cannot be empty
+    if (!password) return res.sendStatus(406)
+
+    User.findOne({name: userName}, (err, doc) => {
         if (err) return res.sendStatus(500)
 
-        res.clearCookie('accessToken', { path: '/api' })
-        res.clearCookie('refreshToken', { path: '/api/account/getNewAccessToken' })
-        res.sendStatus(200)
+        bcrypt.compare(password, doc.password, (err, same) => {
+            if (err) return res.sendStatus(500)
+            if (!same) return res.sendStatus(400)
+
+            User.findOneAndDelete({name: userName}, err => {
+                if (err) return res.sendStatus(500)
+        
+                res.clearCookie('accessToken', { path: '/api' })
+                res.clearCookie('refreshToken', { path: '/api/account/getNewAccessToken' })
+                res.sendStatus(200)
+            })
+        })
     })
 })
 
