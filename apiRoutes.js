@@ -6,10 +6,12 @@ const { verifyJWT } = require('./middlewares.js')
 const { musicRouter } = require('./musicRoutes.js')
 const { PublicPost, User } = require('./models.js')
 const { accountRouter } = require('./accountRoutes.js')
+const { friendsRouter } = require('./friendsRoutes.js')
 
 const apiRouter = express.Router()
 apiRouter.use('/music', musicRouter)
 apiRouter.use('/account', accountRouter)
+apiRouter.use('/friends', friendsRouter)
 
 apiRouter.put('/uploadPublicPost' , (req, res) => {
     const text = req.body.text

@@ -45,7 +45,10 @@ accountRouter.post('/register', (req, res) => {
                         text: 'Hello world!',
                         title: 'This is my first post!',
                         pictureName: 'example.jpg'
-                    }]
+                    }],
+                    friends: [],
+                    incomingFriendRequests: [],
+                    outgoingFriendRequests: []
                 }
                 User.create(newUser, err => {
                     if (err) return res.sendStatus(500)
@@ -73,14 +76,14 @@ accountRouter.post('/login', (req, res) => {
             if (!same) return res.sendStatus(400)
 
             JWT.sign(
-                { userName },
+                { userName, _id: doc._id },
                 accessSecretKey,
                 { algorithm: 'HS256', expiresIn: accessTokenLifetime },
                 (err, accessToken) => {
                     if (err) return res.sendStatus(500)
 
                     JWT.sign(
-                        { userName },
+                        { userName, _id: doc._id },
                         refreshSecretKey,
                         { algorithm: 'HS512', expiresIn: refreshTokenLifetime },
                         (err, refreshToken) => {
@@ -128,7 +131,7 @@ accountRouter.get('/getNewAccessToken', (req, res) => {
         if (err) return res.sendStatus(403)
 
         JWT.sign(
-            {userName: user.userName},
+            {userName: user.userName, _id: user._id},
             accessSecretKey,
             { algorithm: 'HS256', expiresIn: accessTokenLifetime },
             (err, newAccessToken) => {

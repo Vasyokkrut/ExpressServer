@@ -15,7 +15,10 @@ const UserSchema = {
             title: String,
             fileName: String
         }
-    ]
+    ],
+    friends: [mongoose.Schema.Types.ObjectId],
+    incomingFriendRequests: [mongoose.Schema.Types.ObjectId],
+    outgoingFriendRequests: [mongoose.Schema.Types.ObjectId]
 }
 
 const PublicPostSchema = {

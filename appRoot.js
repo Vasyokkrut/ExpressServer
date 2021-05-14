@@ -41,4 +41,8 @@ app.get('/accountSettings', (_, res) => {
     res.sendFile(indexFile)
 })
 
+app.get('/friends', (_, res) => {
+    res.sendFile(indexFile)
+})
+
 exports.app = app
