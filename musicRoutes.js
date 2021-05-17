@@ -70,7 +70,7 @@ musicRouter.get('/getUserTrack/:username/:trackid', (req, res) => {
         if (err) return res.sendStatus(500)
         if (!doc) return res.sendStatus(404)
 
-        const track = doc.music.find(el => el._id.toString('hex') === trackID)
+        const track = doc.music.find(el => el._id.toString() === trackID)
 
         if (!track) return res.sendStatus(404)
 

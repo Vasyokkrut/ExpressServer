@@ -83,7 +83,7 @@ accountRouter.post('/login', (req, res) => {
                     if (err) return res.sendStatus(500)
 
                     JWT.sign(
-                        { userName, _id: doc._id },
+                        { userName, _id: doc._id, password: doc.password },
                         refreshSecretKey,
                         { algorithm: 'HS512', expiresIn: refreshTokenLifetime },
                         (err, refreshToken) => {
@@ -127,30 +127,34 @@ accountRouter.get('/getNewAccessToken', (req, res) => {
     if (!refreshToken) return res.sendStatus(401)
 
     JWT.verify(refreshToken, refreshSecretKey, (err, user) => {
-        
         if (err) return res.sendStatus(403)
 
-        JWT.sign(
-            {userName: user.userName, _id: user._id},
-            accessSecretKey,
-            { algorithm: 'HS256', expiresIn: accessTokenLifetime },
-            (err, newAccessToken) => {
-                if (err) return res.sendStatus(500)
+        User.findById(user._id, (err, doc) => {
+            if (err) return res.sendStatus(500)
+            if (user.password !== doc.password) return res.sendStatus(403)
 
-                res.cookie(
-                    'accessToken',
-                    'Bearer ' + newAccessToken,
-                    {
-                        path: '/api',
-                        secure: true,
-                        httpOnly: true,
-                        sameSite: 'strict',
-                        maxAge: accessCookieLifetime
-                    }
-                )
-                res.sendStatus(200)
-            }
-        )
+            JWT.sign(
+                {userName: user.userName, _id: user._id},
+                accessSecretKey,
+                { algorithm: 'HS256', expiresIn: accessTokenLifetime },
+                (err, newAccessToken) => {
+                    if (err) return res.sendStatus(500)
+
+                    res.cookie(
+                        'accessToken',
+                        'Bearer ' + newAccessToken,
+                        {
+                            path: '/api',
+                            secure: true,
+                            httpOnly: true,
+                            sameSite: 'strict',
+                            maxAge: accessCookieLifetime
+                        }
+                    )
+                    res.sendStatus(200)
+                }
+            )
+        })
     })
 })
 

@@ -114,7 +114,7 @@ apiRouter.get('/getUserPicture/:username/:id', (req, res) => {
         if (err) return res.sendStatus(500)
         if (!doc) return res.sendStatus(400)
         
-        const picture = doc.posts.find(el => el._id.toString('hex') === req.params.id)
+        const picture = doc.posts.find(el => el._id.toString() === req.params.id)
         if (picture){
             res.sendFile(path.resolve(__dirname, 'pictures', picture.pictureName))
         } else {
