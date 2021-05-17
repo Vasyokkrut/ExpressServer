@@ -1,11 +1,18 @@
 if (process.env.NODE_ENV !== 'production') require('dotenv').config()
 
 if (process.env.NODE_ENV) {
-    if (process.env.NODE_ENV === 'production') {
-        console.log('server is starting in production mode')
-    }
-    if (process.env.NODE_ENV === 'development') {
-        console.log('server is starting in development mode')
+    switch (process.env.NODE_ENV) {
+        case 'production':
+            console.log('server is starting in production mode')
+            break
+        case 'development':
+            console.log('server is starting in development mode')
+            break
+        case 'test':
+            console.log('server is starting in testing mode')
+            break
+        default:
+            console.log('server is starting with unknown NODE_ENV variable')
     }
 } else {
     console.log('NODE_ENV is unset, dont forget to set it in production')
