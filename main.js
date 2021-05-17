@@ -27,7 +27,7 @@ if (!process.env.REFRESHTOKENLIFETIME) throw new Error('REFRESHTOKENLIFETIME env
 
 const mongoose = require('mongoose')
 
-const { app } = require('./appRoot.js')
+const { app } = require('./src/appServer.js')
 
 const SERVERPORT = +process.env.SERVERPORT
 const MONGOURL = process.env.MONGOURL

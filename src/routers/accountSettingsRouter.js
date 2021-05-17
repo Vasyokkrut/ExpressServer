@@ -3,8 +3,8 @@ const bcrypt = require('bcrypt')
 const express = require('express')
 const JWT = require('jsonwebtoken')
 
-const { User } = require('./models.js')
-const { verifyJWT } = require('./middlewares.js')
+const { User } = require('../models.js')
+const { verifyJWT } = require('../middlewares.js')
 
 const accessSecretKey = process.env.ACCESSSECRETKEY
 const accessTokenLifetime = process.env.ACCESSTOKENLIFETIME

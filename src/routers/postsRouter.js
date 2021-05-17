@@ -2,8 +2,8 @@ const FS = require('fs')
 const path = require('path')
 const express = require('express')
 
-const { User } = require('./models.js')
-const { verifyJWT } = require('./middlewares.js')
+const { User } = require('../models.js')
+const { verifyJWT } = require('../middlewares.js')
 
 const postsRouter = express.Router()
 
@@ -25,7 +25,7 @@ postsRouter.put('/uploadPost', verifyJWT, (req , res) => {
         .then(doc => { // this doc is the user we saved post for
 
             // check if picture doesn't exist and saving it on local disk
-            const picturePath = path.resolve(__dirname, 'pictures', newPost.pictureName)
+            const picturePath = path.resolve(__dirname, '..', '..', 'pictures', newPost.pictureName)
             if(!FS.existsSync(picturePath)) {
                 picture.mv(
                     picturePath,
@@ -67,7 +67,7 @@ postsRouter.get('/getPostPicture/:username/:id', (req, res) => {
         
         const picture = doc.posts.find(el => el._id.toString() === req.params.id)
         if (picture){
-            res.sendFile(path.resolve(__dirname, 'pictures', picture.pictureName))
+            res.sendFile(path.resolve(__dirname, '..', '..', 'pictures', picture.pictureName))
         } else {
             res.sendStatus(404)
         }
@@ -76,7 +76,7 @@ postsRouter.get('/getPostPicture/:username/:id', (req, res) => {
 
 postsRouter.get('/downloadPicture/:pictureName', (req, res) => {
     const pictureName = req.params.pictureName
-    res.download(path.resolve(__dirname, 'pictures', pictureName))
+    res.download(path.resolve(__dirname, '..', '..', 'pictures', pictureName))
 })
 
 postsRouter.delete('/deletePost', verifyJWT, (req, res) => {

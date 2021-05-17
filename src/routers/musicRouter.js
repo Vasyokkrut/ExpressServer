@@ -2,8 +2,8 @@ const FS = require('fs')
 const path = require('path')
 const express = require('express')
 
-const { User } = require('./models.js')
-const { verifyJWT } = require('./middlewares.js')
+const { User } = require('../models.js')
+const { verifyJWT } = require('../middlewares.js')
 
 const musicRouter = express.Router()
 
@@ -18,7 +18,7 @@ musicRouter.put('/uploadMusicForUser', verifyJWT, (req, res) => {
         {new: true}
     )
         .then(doc => {
-            const trackPath = path.resolve(__dirname, 'music', newTrack.fileName)
+            const trackPath = path.resolve(__dirname, '..', '..', 'music', newTrack.fileName)
             if(!FS.existsSync(trackPath)) {
                 track.mv(
                     trackPath,
@@ -74,8 +74,8 @@ musicRouter.get('/getUserTrack/:username/:trackid', (req, res) => {
 
         if (!track) return res.sendStatus(404)
 
-        if(FS.existsSync(path.resolve(__dirname, 'music', track.fileName))) {
-            res.sendFile(path.resolve(__dirname, 'music', track.fileName))
+        if(FS.existsSync(path.resolve(__dirname, '..', '..', 'music', track.fileName))) {
+            res.sendFile(path.resolve(__dirname, '..', '..', 'music', track.fileName))
         } else {
             res.sendStatus(404)
         }

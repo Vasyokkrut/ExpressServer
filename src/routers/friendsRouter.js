@@ -1,7 +1,7 @@
 const express = require('express')
 
-const { User } = require('./models.js')
-const { verifyJWT } = require('./middlewares.js')
+const { User } = require('../models.js')
+const { verifyJWT } = require('../middlewares.js')
 
 const friendsRouter = express.Router()
 

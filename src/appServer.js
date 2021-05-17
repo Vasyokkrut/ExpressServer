@@ -3,7 +3,7 @@ const express = require('express')
 const cookieParser = require('cookie-parser')
 const fileUpload = require('express-fileupload')
 
-const { apiRoutes } = require('./apiRoutes.js')
+const { apiRouter } = require('./routers/apiRouter.js')
 
 // creating main application object
 // and applying middlewares
@@ -15,12 +15,12 @@ app.disable('x-powered-by')
 app.use(fileUpload())
 app.use(cookieParser())
 app.use(express.json())
-app.use('/api', apiRoutes)
-app.use(express.static(path.resolve(__dirname, 'build')))
+app.use('/api', apiRouter)
+app.use(express.static(path.resolve(__dirname, '..', 'build')))
 
 // the following endpoints respond index.html file
 // which is main file of the application
-const indexFile = path.resolve(__dirname, 'build', 'index.html')
+const indexFile = path.resolve(__dirname, '..', 'build', 'index.html')
 app.get('/', (_, res) => {
     res.sendFile(indexFile)
 })
