@@ -21,19 +21,10 @@ const UserSchema = {
     outgoingFriendRequests: [mongoose.Schema.Types.ObjectId]
 }
 
-const PublicPostSchema = {
-    text: String,
-    title: String,
-    pictureName: String
-}
-
-// creating schemas for models
+// creating schema for model
 const mongoUserSchema = new mongoose.Schema(UserSchema)
-const mongoPublicPostSchema = new mongoose.Schema(PublicPostSchema)
 
-// creating models
+// creating model
 const User = mongoose.model('user', mongoUserSchema)
-const PublicPost = mongoose.model('publicpost', mongoPublicPostSchema)
 
 exports.User = User
-exports.PublicPost = PublicPost

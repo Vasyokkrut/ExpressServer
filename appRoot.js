@@ -25,10 +25,6 @@ app.get('/', (_, res) => {
     res.sendFile(indexFile)
 })
 
-app.get('/publicPosts', (_, res) => {
-    res.sendFile(indexFile)
-})
-
 app.get('/myMusic', (_, res) => {
     res.sendFile(indexFile)
 })
