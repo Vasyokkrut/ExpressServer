@@ -62,7 +62,7 @@ accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
         
                         // generating new access jwt for user
                         JWT.sign(
-                            { userName: newUserName },
+                            { userName: newUserName, _id: doc._id },
                             accessSecretKey,
                             { algorithm: 'HS256', expiresIn: accessTokenLifetime },
                             (err, newAccessToken) => {
@@ -70,7 +70,7 @@ accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
                                 
                                 // generating new refresh jwt for user
                                 JWT.sign(
-                                    { userName: newUserName },
+                                    { userName: newUserName, _id: doc._id, password: doc.password },
                                     refreshSecretKey,
                                     { algorithm: 'HS512', expiresIn: refreshTokenLifetime },
                                     (err, newRefreshToken) => {
@@ -127,26 +127,48 @@ accountSettingsRouter.patch('/changePassword', verifyJWT, (req, res) => {
     // find user in DB to compare passwords
     User.findOne({name: userName}, (err, doc) => {
         if (err) return res.sendStatus(500)
-        
+
         // comparing old password entered by user on website
         // with current password in DB
         bcrypt.compare(oldPassword, doc.password, (err, same) => {
             if (err) return res.sendStatus(500)
             if (!same) return res.sendStatus(400)
-            
+
             // if current password confirmed, hash new password
-            bcrypt.hash(newPassword, 10, (err, result) => {
+            bcrypt.hash(newPassword, 10, (err, passwordHash) => {
                 if (err) return res.sendStatus(500)
-                
+
                 // find user and update password hash
                 User.findOneAndUpdate(
                     {name: userName},
-                    {$set: {password: result}},
+                    {$set: {password: passwordHash}},
                     {new: true},
-                    err => {
+                    (err, doc) => {
                         if (err) return res.sendStatus(500)
-        
-                        res.sendStatus(200)
+
+                        // since only password changed,
+                        // we shouldn't reissue access token for user, only refresh token
+                        JWT.sign(
+                            { userName, _id: doc._id, password: passwordHash },
+                            refreshSecretKey,
+                            { algorithm: 'HS512', expiresIn: refreshTokenLifetime },
+                            (err, newRefreshToken) => {
+                                if (err) return res.sendStatus(500)
+
+                                res.cookie(
+                                    'refreshToken',
+                                    'Bearer ' + newRefreshToken,
+                                    {
+                                        secure: true,
+                                        httpOnly: true,
+                                        sameSite: 'strict',
+                                        maxAge: refreshCookieLifetime,
+                                        path: '/api/account/getNewAccessToken'
+                                    }
+                                )
+                                res.sendStatus(200)
+                            }
+                        )
                     }
                 )
             })
