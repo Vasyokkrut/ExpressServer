@@ -18,7 +18,7 @@ postsRouter.put('/uploadPost', verifyJWT, (req , res) => {
     }
     
     User.findOneAndUpdate(
-        {name: req.user.userName},
+        {name: req.user.name},
         {$push: {posts: newPost}},
         {new: true}
     )
@@ -34,13 +34,13 @@ postsRouter.put('/uploadPost', verifyJWT, (req , res) => {
 
                         // response to user with new post
                         const lastItem = doc.posts.length - 1
-                        res.status(200).json(doc.posts[lastItem])
+                        res.json(doc.posts[lastItem])
                     }
                 )
             } else {
                 // response to user with new post
                 const lastItem = doc.posts.length - 1
-                res.status(200).json(doc.posts[lastItem])
+                res.json(doc.posts[lastItem])
             
             }
         })
@@ -54,7 +54,7 @@ postsRouter.get('/getUserInfo/:user', (req, res) => {
         if (err) return res.sendStatus(500)
         if (!doc) return res.sendStatus(404)
 
-        res.status(200).json({userPosts: doc.posts, userName: doc.name})
+        res.json({userPosts: doc.posts, userName: doc.name})
     })
 })
 
@@ -81,7 +81,7 @@ postsRouter.get('/downloadPicture/:pictureName', (req, res) => {
 
 postsRouter.delete('/deletePost', verifyJWT, (req, res) => {
     User.findOneAndUpdate(
-        {name: req.user.userName},
+        {name: req.user.name},
         {$pull: {posts: {_id: req.body.delete}}},
         {new: true},
         (err, doc) => {

@@ -19,7 +19,7 @@ friendsRouter.get('/searchFriends', verifyJWT, (req, res) => {
         if (err) return res.sendStatus(500)
         if (!docs.length) return res.sendStatus(404)
 
-        User.findOne({name: user.userName}, (err, doc) => {
+        User.findOne({name: user.name}, (err, doc) => {
             if (err) return res.sendStatus(500)
             if (!doc) return res.sendStatus(404)
 
@@ -45,7 +45,7 @@ friendsRouter.get('/searchFriends', verifyJWT, (req, res) => {
 friendsRouter.get('/getFriends', verifyJWT, (req, res) => {
     const user = req.user
 
-    User.findOne({name: user.userName})
+    User.findOne({name: user.name})
         .populate('friends', 'name')
         .exec((err, doc) => {
             if (err) return res.sendStatus(500)
@@ -56,7 +56,7 @@ friendsRouter.get('/getFriends', verifyJWT, (req, res) => {
 })
 
 friendsRouter.get('/getIncomingRequests', verifyJWT, (req, res) => {
-    const userName = req.user.userName
+    const userName = req.user.name
 
     User.findOne({name: userName})
         .populate('incomingFriendRequests', 'name')
@@ -72,7 +72,7 @@ friendsRouter.get('/getIncomingRequests', verifyJWT, (req, res) => {
 })
 
 friendsRouter.get('/getOutgoingRequests', verifyJWT, (req, res) => {
-    const userName = req.user.userName
+    const userName = req.user.name
 
     User.findOne({name: userName})
         .populate('outgoingFriendRequests', 'name')
@@ -172,7 +172,7 @@ friendsRouter.post('/declineIncomingRequest', verifyJWT, (req, res) => {
     const requester = req.body.requester
 
     User.findOneAndUpdate(
-        {name: user.userName},
+        {name: user.name},
         {$pull: {incomingFriendRequests: requester._id}},
         (err, doc) => {
             if (err) return res.sendStatus(500)
@@ -195,7 +195,7 @@ friendsRouter.delete('/deleteOutgoingRequest', verifyJWT, (req, res) => {
     const recipient = req.body
 
     User.findOneAndUpdate(
-        {name: user.userName},
+        {name: user.name},
         {$pull: {outgoingFriendRequests: recipient._id}},
         (err, doc) => {
             if (err) return res.sendStatus(500)
@@ -218,7 +218,7 @@ friendsRouter.delete('/deleteFriend', verifyJWT, (req, res) => {
     const friend = req.body
 
     User.findOneAndUpdate(
-        {name: user.userName},
+        {name: user.name},
         {$pull: {friends: friend._id}},
         (err, doc) => {
             if (err) return res.sendStatus(500)

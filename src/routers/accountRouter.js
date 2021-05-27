@@ -76,14 +76,14 @@ accountRouter.post('/login', (req, res) => {
             if (!same) return res.sendStatus(400)
 
             JWT.sign(
-                { userName, _id: doc._id },
+                { name: doc.name, _id: doc._id },
                 accessSecretKey,
                 { algorithm: 'HS256', expiresIn: accessTokenLifetime },
                 (err, accessToken) => {
                     if (err) return res.sendStatus(500)
 
                     JWT.sign(
-                        { userName, _id: doc._id, password: doc.password },
+                        { name: doc.name, _id: doc._id, password: doc.password },
                         refreshSecretKey,
                         { algorithm: 'HS512', expiresIn: refreshTokenLifetime },
                         (err, refreshToken) => {
@@ -134,7 +134,7 @@ accountRouter.get('/getNewAccessToken', (req, res) => {
             if (user.password !== doc.password) return res.sendStatus(403)
 
             JWT.sign(
-                {userName: user.userName, _id: user._id},
+                { name: doc.name, _id: user._id },
                 accessSecretKey,
                 { algorithm: 'HS256', expiresIn: accessTokenLifetime },
                 (err, newAccessToken) => {

@@ -13,7 +13,7 @@ musicRouter.put('/uploadMusicForUser', verifyJWT, (req, res) => {
     const newTrack = {fileName: track.md5 + track.name, title: title}
 
     User.findOneAndUpdate(
-        {name: req.user.userName},
+        {name: req.user.name},
         {$push: {music: newTrack}},
         {new: true}
     )
@@ -41,7 +41,7 @@ musicRouter.put('/uploadMusicForUser', verifyJWT, (req, res) => {
 
 musicRouter.delete('/deleteUserTrack', verifyJWT, (req, res) => {
     User.findOneAndUpdate(
-        {name: req.user.userName},
+        {name: req.user.name},
         {$pull: {music: {_id: req.body.trackID}}},
         {new: true},
         (err, doc) => {

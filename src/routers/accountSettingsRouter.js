@@ -17,7 +17,7 @@ const accountSettingsRouter = express.Router()
 accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
     const password = req.body.password
     const newUserName = req.body.newUserName
-    const currentUserName = req.user.userName
+    const currentUserName = req.user.name
     const allowedSymbols = /^[A-Za-z0-9]+$/
 
     // current password and new username cannot be empty
@@ -62,7 +62,7 @@ accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
         
                         // generating new access jwt for user
                         JWT.sign(
-                            { userName: newUserName, _id: doc._id },
+                            { name: newUserName, _id: doc._id },
                             accessSecretKey,
                             { algorithm: 'HS256', expiresIn: accessTokenLifetime },
                             (err, newAccessToken) => {
@@ -70,7 +70,7 @@ accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
                                 
                                 // generating new refresh jwt for user
                                 JWT.sign(
-                                    { userName: newUserName, _id: doc._id, password: doc.password },
+                                    { name: newUserName, _id: doc._id, password: doc.password },
                                     refreshSecretKey,
                                     { algorithm: 'HS512', expiresIn: refreshTokenLifetime },
                                     (err, newRefreshToken) => {
@@ -114,7 +114,7 @@ accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
 accountSettingsRouter.patch('/changePassword', verifyJWT, (req, res) => {
     const oldPassword = req.body.oldPassword
     const newPassword = req.body.newPassword
-    const userName = req.user.userName
+    const userName = req.user.name
     const allowedSymbols = /^[A-Za-z0-9]+$/
 
     // old password and new password cannot be empty
@@ -149,7 +149,7 @@ accountSettingsRouter.patch('/changePassword', verifyJWT, (req, res) => {
                         // since only password changed,
                         // we shouldn't reissue access token for user, only refresh token
                         JWT.sign(
-                            { userName, _id: doc._id, password: passwordHash },
+                            { name: doc.name, _id: doc._id, password: passwordHash },
                             refreshSecretKey,
                             { algorithm: 'HS512', expiresIn: refreshTokenLifetime },
                             (err, newRefreshToken) => {
@@ -177,7 +177,7 @@ accountSettingsRouter.patch('/changePassword', verifyJWT, (req, res) => {
 })
 
 accountSettingsRouter.delete('/deleteAccount', verifyJWT, (req, res) => {
-    const userName = req.user.userName
+    const userName = req.user.name
     const password = req.body.password
 
     // password cannot be empty
