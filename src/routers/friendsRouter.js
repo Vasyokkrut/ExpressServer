@@ -90,7 +90,7 @@ friendsRouter.get('/getOutgoingRequests', verifyJWT, (req, res) => {
 friendsRouter.post('/sendRequest', verifyJWT, (req, res) => {
     const requester = req.user
     const recipient = req.body.recipient
-    
+
     if (requester === recipient) return res.sendStatus(400)
 
     User.findOne({name: recipient.name}, (err, doc) => {
@@ -100,7 +100,7 @@ friendsRouter.post('/sendRequest', verifyJWT, (req, res) => {
         if (doc.incomingFriendRequests.includes(requester._id)) return res.sendStatus(208)
         if (doc.friends.includes(requester._id)) return res.sendStatus(208)
 
-        User.findOne({name: requester.userName}, (err, doc) => {
+        User.findOne({name: requester.name}, (err, doc) => {
             if (err) return res.sendStatus(500)
             if (!doc) return res.sendStatus(404)
 
@@ -114,7 +114,7 @@ friendsRouter.post('/sendRequest', verifyJWT, (req, res) => {
                     if (err) return res.sendStatus(500)
     
                     User.findOneAndUpdate(
-                        {name: requester.userName},
+                        {name: requester.name},
                         {$push: {outgoingFriendRequests: recipient._id}},
                         (err, doc) => {
                             if (err) return res.sendStatus(500)
@@ -133,8 +133,8 @@ friendsRouter.post('/acceptRequest', verifyJWT, (req, res) => {
     const recipient = req.user
 
     if (!requester) return res.sendStatus(400)
-    
-    User.findOne({name: recipient.userName}, (err, recipient) => {
+
+    User.findOne({name: recipient.name}, (err, recipient) => {
         if (err) return res.sendStatus(500)
         if (!recipient) return res.sendStatus(404)
 
