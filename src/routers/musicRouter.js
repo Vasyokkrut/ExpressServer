@@ -7,7 +7,7 @@ const { verifyJWT } = require('../middlewares.js')
 
 const musicRouter = express.Router()
 
-musicRouter.put('/uploadMusicForUser', verifyJWT, (req, res) => {
+musicRouter.put('/uploadAudioTrack', verifyJWT, (req, res) => {
     const title = req.body.title
     const track = req.files.track
     const newTrack = {fileName: track.md5 + track.name, title: title}
@@ -39,7 +39,7 @@ musicRouter.put('/uploadMusicForUser', verifyJWT, (req, res) => {
         .catch(() => res.sendStatus(500))
 })
 
-musicRouter.delete('/deleteUserTrack', verifyJWT, (req, res) => {
+musicRouter.delete('/deleteAudioTrack', verifyJWT, (req, res) => {
     User.findOneAndUpdate(
         {name: req.user.name},
         {$pull: {music: {_id: req.body.trackID}}},
@@ -51,7 +51,7 @@ musicRouter.delete('/deleteUserTrack', verifyJWT, (req, res) => {
     )
 })
 
-musicRouter.get('/getUserMusic/:username', (req, res) => {
+musicRouter.get('/getMusic/:username', (req, res) => {
     const userName = req.params.username
 
     User.findOne({name: userName}, (err, doc) => {
@@ -62,7 +62,7 @@ musicRouter.get('/getUserMusic/:username', (req, res) => {
     })
 })
 
-musicRouter.get('/getUserTrack/:username/:trackid', (req, res) => {
+musicRouter.get('/getAudioTrack/:username/:trackid', (req, res) => {
     const trackID = req.params.trackid
     const userName = req.params.username
 
