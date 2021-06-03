@@ -47,7 +47,7 @@ set NODE_ENV=production
 the default values you can see in .env file,  
 but in your environment these variables can be different
 
-**_don't use default values for jwt secret keys!_**  
+***don't use default values for jwt secret keys!***  
 just set them to a random long string
 
 #### then you can install dependencies and start the server:
