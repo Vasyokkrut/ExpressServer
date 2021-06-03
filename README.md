@@ -2,11 +2,10 @@
 
 > powered by and written on express framework with mongoose
 
-This is the backend part of my fullstack mern application. 
-Once you've installed this server, you can find
-the frontend part [here](https://github.com/Vasyokkrut/ReactFrontend)
+This is the backend part of fullstack mern application  
+Once you've installed this server, you can find the frontend part [here](https://github.com/Vasyokkrut/ReactFrontend)
 
-# starting up
+# Starting up
 **note that for using this app you should have a running mongodb**
 
 ## for development
@@ -45,7 +44,7 @@ set NODE_ENV=production
 - MONGOURL
 - SERVERPORT
 
-the default values you can see in .env file, 
+the default values you can see in .env file,  
 but in your environment these variables can be different
 
 **_don't use default values for jwt secret keys!_**  
