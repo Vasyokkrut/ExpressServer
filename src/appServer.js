@@ -23,7 +23,7 @@ app.get('/', (_, res) => {
     res.sendFile(indexFile)
 })
 
-app.get('/myMusic', (_, res) => {
+app.get('/music', (_, res) => {
     res.sendFile(indexFile)
 })
 
@@ -37,6 +37,10 @@ app.get('/accountSettings', (_, res) => {
 
 app.get('/friends', (_, res) => {
     res.sendFile(indexFile)
+})
+
+app.get('/*', (_, res) => {
+    res.redirect('/')
 })
 
 exports.app = app
