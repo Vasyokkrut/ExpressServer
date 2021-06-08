@@ -1,13 +1,14 @@
 const FS = require('fs')
 const path = require('path')
 const express = require('express')
+const fileUpload = require('express-fileupload')
 
 const { User } = require('../models.js')
 const { verifyJWT } = require('../middlewares.js')
 
 const postsRouter = express.Router()
 
-postsRouter.put('/uploadPost', verifyJWT, (req , res) => {
+postsRouter.put('/uploadPost', [fileUpload(), verifyJWT], (req , res) => {
     const text = req.body.text
     const title = req.body.title
     const picture = req.files.picture

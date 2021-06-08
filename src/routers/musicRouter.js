@@ -1,13 +1,14 @@
 const FS = require('fs')
 const path = require('path')
 const express = require('express')
+const fileUpload = require('express-fileupload')
 
 const { User } = require('../models.js')
 const { verifyJWT } = require('../middlewares.js')
 
 const musicRouter = express.Router()
 
-musicRouter.put('/uploadAudioTrack', verifyJWT, (req, res) => {
+musicRouter.put('/uploadAudioTrack', [fileUpload(), verifyJWT], (req, res) => {
     const title = req.body.title
     const track = req.files.track
     const newTrack = {fileName: track.md5 + track.name, title: title}
