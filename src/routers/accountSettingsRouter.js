@@ -39,7 +39,7 @@ accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
         // check if user found, but this is not the same user
         if (doc) {
             const isTheSameUser = RegExp('^' + doc.name + '$', 'i').test(currentUserName)
-            if (!isTheSameUser) return res.status(200).json({userExists: true})
+            if (!isTheSameUser) return res.json({userExists: true})
         }
 
         // searching user by it's current username

@@ -28,13 +28,13 @@ musicRouter.put('/uploadAudioTrack', [fileUpload(), verifyJWT], (req, res) => {
 
                         // response to user with new track
                         const lastItem = doc.music.length - 1
-                        res.status(200).json(doc.music[lastItem])
+                        res.json(doc.music[lastItem])
                     }
                 )
             } else {
                 // response to user with new track
                 const lastItem = doc.music.length - 1
-                res.status(200).json(doc.music[lastItem])
+                res.json(doc.music[lastItem])
             }
         })
         .catch(() => res.sendStatus(500))
@@ -59,7 +59,7 @@ musicRouter.get('/getMusic/:username', (req, res) => {
         if (err) return res.sendStatus(500)
         if (!doc) return res.sendStatus(404)
 
-        res.status(200).json({userMusic: doc.music})
+        res.json({userMusic: doc.music})
     })
 })
 
