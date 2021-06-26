@@ -15,7 +15,7 @@ musicRouter.put('/uploadAudioTrack', [fileUpload(), verifyJWT], (req, res) => {
 
     User.findOneAndUpdate(
         {name: req.user.name},
-        {$push: {music: newTrack}},
+        {$push: {music: {$each: [newTrack], $position: 0}}},
         {new: true}
     )
         .then(doc => {
@@ -27,14 +27,12 @@ musicRouter.put('/uploadAudioTrack', [fileUpload(), verifyJWT], (req, res) => {
                         if (err) return res.sendStatus(500)
 
                         // response to user with new track
-                        const lastItem = doc.music.length - 1
-                        res.json(doc.music[lastItem])
+                        res.json(doc.music[0])
                     }
                 )
             } else {
                 // response to user with new track
-                const lastItem = doc.music.length - 1
-                res.json(doc.music[lastItem])
+                res.json(doc.music[0])
             }
         })
         .catch(() => res.sendStatus(500))
