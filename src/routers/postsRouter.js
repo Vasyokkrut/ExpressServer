@@ -15,7 +15,7 @@ postsRouter.put('/uploadPost', [fileUpload(), verifyJWT], (req , res) => {
     const newPost = {
         text: text,
         title: title,
-        pictureName: picture.md5 + picture.name
+        pictureName: picture.md5 + path.extname(picture.name)
     }
     
     User.findOneAndUpdate(

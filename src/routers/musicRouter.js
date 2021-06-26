@@ -11,7 +11,7 @@ const musicRouter = express.Router()
 musicRouter.put('/uploadAudioTrack', [fileUpload(), verifyJWT], (req, res) => {
     const title = req.body.title
     const track = req.files.track
-    const newTrack = {fileName: track.md5 + track.name, title: title}
+    const newTrack = {fileName: track.md5 + path.extname(track.name), title: title}
 
     User.findOneAndUpdate(
         {name: req.user.name},
