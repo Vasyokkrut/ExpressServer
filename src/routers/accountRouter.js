@@ -12,6 +12,7 @@ const accessCookieLifetime = ms(accessTokenLifetime)
 const refreshSecretKey = process.env.REFRESHSECRETKEY
 const refreshTokenLifetime = process.env.REFRESHTOKENLIFETIME
 const refreshCookieLifetime = ms(refreshTokenLifetime)
+const isProduction = process.env.NODE_ENV === 'production'
 
 const accountRouter = express.Router()
 accountRouter.use('/settings', accountSettingsRouter)
@@ -94,7 +95,7 @@ accountRouter.post('/login', (req, res) => {
                                 'Bearer ' + accessToken,
                                 {
                                     path: '/api',
-                                    secure: true,
+                                    secure: isProduction,
                                     httpOnly: true,
                                     sameSite: 'strict',
                                     maxAge: accessCookieLifetime
@@ -104,7 +105,7 @@ accountRouter.post('/login', (req, res) => {
                                 'refreshToken',
                                 'Bearer ' + refreshToken,
                                 {
-                                    secure: true,
+                                    secure: isProduction,
                                     httpOnly: true,
                                     sameSite: 'strict',
                                     maxAge: refreshCookieLifetime,
@@ -145,7 +146,7 @@ accountRouter.get('/getNewAccessToken', (req, res) => {
                         'Bearer ' + newAccessToken,
                         {
                             path: '/api',
-                            secure: true,
+                            secure: isProduction,
                             httpOnly: true,
                             sameSite: 'strict',
                             maxAge: accessCookieLifetime

@@ -12,6 +12,8 @@ const accessCookieLifetime = ms(accessTokenLifetime)
 const refreshSecretKey = process.env.REFRESHSECRETKEY
 const refreshTokenLifetime = process.env.REFRESHTOKENLIFETIME
 const refreshCookieLifetime = ms(refreshTokenLifetime)
+const isProduction = process.env.NODE_ENV === 'production'
+
 const accountSettingsRouter = express.Router()
 
 accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
@@ -82,7 +84,7 @@ accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
                                             'Bearer ' + newAccessToken,
                                             {
                                                 path: '/api',
-                                                secure: true,
+                                                secure: isProduction,
                                                 httpOnly: true,
                                                 sameSite: 'strict',
                                                 maxAge: accessCookieLifetime
@@ -92,7 +94,7 @@ accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
                                             'refreshToken',
                                             'Bearer ' + newRefreshToken,
                                             {
-                                                secure: true,
+                                                secure: isProduction,
                                                 httpOnly: true,
                                                 sameSite: 'strict',
                                                 maxAge: refreshCookieLifetime,
@@ -159,7 +161,7 @@ accountSettingsRouter.patch('/changePassword', verifyJWT, (req, res) => {
                                     'refreshToken',
                                     'Bearer ' + newRefreshToken,
                                     {
-                                        secure: true,
+                                        secure: isProduction,
                                         httpOnly: true,
                                         sameSite: 'strict',
                                         maxAge: refreshCookieLifetime,
