@@ -1,6 +1,7 @@
 const FS = require('fs')
 const path = require('path')
 const express = require('express')
+const imageSize = require('image-size')
 const fileUpload = require('express-fileupload')
 
 const { User } = require('../models.js')
@@ -12,40 +13,50 @@ postsRouter.put('/uploadPost', [fileUpload(), verifyJWT], (req , res) => {
     const text = req.body.text
     const title = req.body.title
     const picture = req.files.picture
-    const newPost = {
-        text: text,
-        title: title,
-        pictureName: picture.md5 + path.extname(picture.name)
-    }
+
+    try {
+        const { width, height } = imageSize(picture.data)
+
+        if (width < 300 || height < 200) return res.sendStatus(406)
+
+        const newPost = {
+            text: text,
+            title: title,
+            pictureName: picture.md5 + path.extname(picture.name),
+            pictureSize: { width, height }
+        }
+
+        User.findOneAndUpdate(
+            {name: req.user.name},
+            {$push: {posts: newPost}},
+            {new: true},
+            (err, doc) => {
+                if (err) return res.sendStatus(500)
     
-    User.findOneAndUpdate(
-        {name: req.user.name},
-        {$push: {posts: newPost}},
-        {new: true}
-    )
-        .then(doc => { // this doc is the user we saved post for
-
-            // check if picture doesn't exist and saving it on local disk
-            const picturePath = path.resolve(__dirname, '..', '..', 'pictures', newPost.pictureName)
-            if(!FS.existsSync(picturePath)) {
-                picture.mv(
-                    picturePath,
-                    err => {
-                        if (err) res.sendStatus(500)
-
-                        // response to user with new post
-                        const lastItem = doc.posts.length - 1
-                        res.json(doc.posts[lastItem])
-                    }
-                )
-            } else {
-                // response to user with new post
-                const lastItem = doc.posts.length - 1
-                res.json(doc.posts[lastItem])
-            
+                // check if picture doesn't exist and saving it on local disk
+                const picturePath = path.resolve(__dirname, '..', '..', 'pictures', newPost.pictureName)
+                if(!FS.existsSync(picturePath)) {
+                    picture.mv(
+                        picturePath,
+                        err => {
+                            if (err) res.sendStatus(500)
+    
+                            // response to user with new post
+                            const lastItem = doc.posts.length - 1
+                            res.json(doc.posts[lastItem])
+                        }
+                    )
+                } else {
+                    // response to user with new post
+                    const lastItem = doc.posts.length - 1
+                    res.json(doc.posts[lastItem])
+                
+                }
             }
-        })
-        .catch(() => res.sendStatus(500))
+        )
+    } catch {
+        res.sendStatus(406)
+    }
 })
 
 postsRouter.get('/getUserInfo/:user', (req, res) => {
