@@ -7,7 +7,11 @@ const UserSchema = {
         {
             text: String,
             title: String,
-            pictureName: String
+            pictureName: String,
+            pictureSize: {
+                width: Number,
+                height: Number
+            }
         }
     ],
     music: [
