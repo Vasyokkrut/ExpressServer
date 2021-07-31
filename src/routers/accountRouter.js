@@ -43,14 +43,19 @@ accountRouter.post('/register', (req, res) => {
                     password: passwordHash,
                     music: [],
                     posts: [{
-                        text: 'Hello world!',
-                        title: 'This is my first post!',
-                        pictureName: 'example.jpg'
+                        text: `Hello! My name is ${userName} and this is my first post!`,
+                        title: 'Hello world!',
+                        pictureName: 'example.jpg',
+                        pictureSize: {
+                            width: 3840, // width of example.jpg picture
+                            height: 2160 // height of example.jpg picture
+                        }
                     }],
                     friends: [],
                     incomingFriendRequests: [],
                     outgoingFriendRequests: []
                 }
+
                 User.create(newUser, err => {
                     if (err) return res.sendStatus(500)
                     
