@@ -11,14 +11,19 @@ const musicRouter = express.Router()
 musicRouter.put('/uploadAudioTrack', [fileUpload(), verifyJWT], (req, res) => {
     const title = req.body.title
     const track = req.files.track
+
+    if (!track) return res.sendStatus(406)
+    if (!title || typeof title !== 'string') return res.sendStatus(406)
+
     const newTrack = {fileName: track.md5 + path.extname(track.name), title: title}
 
-    User.findOneAndUpdate(
-        {name: req.user.name},
+    User.findByIdAndUpdate(
+        req.user._id,
         {$push: {music: {$each: [newTrack], $position: 0}}},
-        {new: true}
-    )
-        .then(doc => {
+        {new: true},
+        (err, doc) => {
+            if (err) return res.sendStatus(500)
+
             const trackPath = path.resolve(__dirname, '..', '..', 'music', newTrack.fileName)
             if(!FS.existsSync(trackPath)) {
                 track.mv(
@@ -34,13 +39,13 @@ musicRouter.put('/uploadAudioTrack', [fileUpload(), verifyJWT], (req, res) => {
                 // response to user with new track
                 res.json(doc.music[0])
             }
-        })
-        .catch(() => res.sendStatus(500))
+        }
+    )
 })
 
 musicRouter.delete('/deleteAudioTrack', verifyJWT, (req, res) => {
-    User.findOneAndUpdate(
-        {name: req.user.name},
+    User.findByIdAndUpdate(
+        req.user._id,
         {$pull: {music: {_id: req.body.trackID}}},
         {new: true},
         (err, doc) => {

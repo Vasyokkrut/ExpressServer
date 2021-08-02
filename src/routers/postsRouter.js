@@ -14,8 +14,12 @@ postsRouter.put('/uploadPost', [fileUpload(), verifyJWT], (req , res) => {
     const title = req.body.title
     const picture = req.files.picture
 
+    if (!picture) return res.sendStatus(406)
+    if (!text || typeof text !== 'string') return res.sendStatus(406)
+    if (!title || typeof title !== 'string') return res.sendStatus(406)
+
     try {
-        const { width, height } = imageSize(picture.data)
+        const { width, height } = imageSize(picture.data) // this function can throw an exception
 
         if (width < 300 || height < 200) return res.sendStatus(406)
 
@@ -26,8 +30,8 @@ postsRouter.put('/uploadPost', [fileUpload(), verifyJWT], (req , res) => {
             pictureSize: { width, height }
         }
 
-        User.findOneAndUpdate(
-            {name: req.user.name},
+        User.findByIdAndUpdate(
+            req.user._id,
             {$push: {posts: newPost}},
             {new: true},
             (err, doc) => {
@@ -60,9 +64,14 @@ postsRouter.put('/uploadPost', [fileUpload(), verifyJWT], (req , res) => {
 })
 
 postsRouter.get('/getUserInfo/:user', (req, res) => {
-    const userName = RegExp('^' + req.params.user + '$', 'i')
+    const userName = req.params.user
+    const allowedSymbols = /^[A-Za-z0-9]+$/
 
-    User.findOne({name: userName}, (err, doc) => {
+    if (!allowedSymbols.test(userName)) return res.sendStatus(404)
+
+    const regexUserName = RegExp('^' + req.params.user + '$', 'i')
+
+    User.findOne({name: regexUserName}, (err, doc) => {
         if (err) return res.sendStatus(500)
         if (!doc) return res.sendStatus(404)
 
@@ -70,30 +79,27 @@ postsRouter.get('/getUserInfo/:user', (req, res) => {
     })
 })
 
-postsRouter.get('/getPostPicture/:username/:id', (req, res) => {
-    const userName = RegExp('^' + req.params.username + '$', 'i')
+postsRouter.get('/getPostPicture/:pictureName', (req, res) => {
+    const pictureName = req.params.pictureName
+    const allowedSymbols = /^[A-Za-z0-9]+\.[A-Za-z0-9]+$/
 
-    User.findOne({name: userName}, (err, doc) => {
-        if (err) return res.sendStatus(500)
-        if (!doc) return res.sendStatus(400)
-        
-        const picture = doc.posts.find(el => el._id.toString() === req.params.id)
-        if (picture){
-            res.sendFile(path.resolve(__dirname, '..', '..', 'pictures', picture.pictureName))
-        } else {
-            res.sendStatus(404)
-        }
-    })
+    if (!allowedSymbols.test(pictureName)) return res.sendStatus(400)
+
+    res.sendFile(path.resolve(__dirname, '..', '..', 'pictures', pictureName))
 })
 
 postsRouter.get('/downloadPicture/:pictureName', (req, res) => {
     const pictureName = req.params.pictureName
+    const allowedSymbols = /^[A-Za-z0-9]+\.[A-Za-z0-9]+$/
+
+    if (!allowedSymbols.test(pictureName)) return res.sendStatus(400)
+
     res.download(path.resolve(__dirname, '..', '..', 'pictures', pictureName))
 })
 
 postsRouter.delete('/deletePost', verifyJWT, (req, res) => {
-    User.findOneAndUpdate(
-        {name: req.user.name},
+    User.findByIdAndUpdate(
+        req.user._id,
         {$pull: {posts: {_id: req.body.delete}}},
         {new: true},
         (err, doc) => {

@@ -19,6 +19,7 @@ const accountSettingsRouter = express.Router()
 accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
     const password = req.body.password
     const newUserName = req.body.newUserName
+    const userId = req.user._id
     const currentUserName = req.user.name
     const allowedSymbols = /^[A-Za-z0-9]+$/
 
@@ -28,9 +29,6 @@ accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
 
     // new username could contain only letters and numbers
     if (!allowedSymbols.test(newUserName)) return res.sendStatus(406)
-
-    // check is new username contains any kind of spaces or endlines
-    if (/\s/.test(newUserName)) return res.sendStatus(406)
 
     const regexUserName = RegExp('^' + newUserName + '$', 'i')
 
@@ -44,19 +42,17 @@ accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
             if (!isTheSameUser) return res.json({userExists: true})
         }
 
-        // searching user by it's current username
-        User.findOne({name: currentUserName}, (err, doc) => {
+        User.findById(userId, (err, doc) => {
             if (err) return res.sendStatus(500)
             if (!doc) return res.sendStatus(404)
 
-            // confirm password
             bcrypt.compare(password, doc.password, (err, same) => {
                 if (err) return res.sendStatus(500)
                 if (!same) return res.sendStatus(400)
 
                 // if password has been confirmed, update username
-                User.findOneAndUpdate(
-                    {name: currentUserName},
+                User.findByIdAndUpdate(
+                    userId,
                     {$set: {name: newUserName}},
                     {new: true},
                     (err, doc) => {
@@ -116,7 +112,7 @@ accountSettingsRouter.patch('/changeUserName', verifyJWT, (req, res) => {
 accountSettingsRouter.patch('/changePassword', verifyJWT, (req, res) => {
     const oldPassword = req.body.oldPassword
     const newPassword = req.body.newPassword
-    const userName = req.user.name
+    const userId = req.user._id
     const allowedSymbols = /^[A-Za-z0-9]+$/
 
     // old password and new password cannot be empty
@@ -127,8 +123,9 @@ accountSettingsRouter.patch('/changePassword', verifyJWT, (req, res) => {
     if (!allowedSymbols.test(newPassword)) return res.sendStatus(406)
 
     // find user in DB to compare passwords
-    User.findOne({name: userName}, (err, doc) => {
+    User.findById(userId, (err, doc) => {
         if (err) return res.sendStatus(500)
+        if (!doc) return res.sendStatus(404)
 
         // comparing old password entered by user on website
         // with current password in DB
@@ -141,8 +138,8 @@ accountSettingsRouter.patch('/changePassword', verifyJWT, (req, res) => {
                 if (err) return res.sendStatus(500)
 
                 // find user and update password hash
-                User.findOneAndUpdate(
-                    {name: userName},
+                User.findByIdAndUpdate(
+                    userId,
                     {$set: {password: passwordHash}},
                     {new: true},
                     (err, doc) => {
@@ -179,20 +176,21 @@ accountSettingsRouter.patch('/changePassword', verifyJWT, (req, res) => {
 })
 
 accountSettingsRouter.delete('/deleteAccount', verifyJWT, (req, res) => {
-    const userName = req.user.name
+    const userId = req.user._id
     const password = req.body.password
 
     // password cannot be empty
     if (!password) return res.sendStatus(406)
 
-    User.findOne({name: userName}, (err, doc) => {
+    User.findById(userId, (err, doc) => {
         if (err) return res.sendStatus(500)
+        if (!doc) return res.sendStatus(404)
 
         bcrypt.compare(password, doc.password, (err, same) => {
             if (err) return res.sendStatus(500)
             if (!same) return res.sendStatus(400)
 
-            User.findOneAndDelete({name: userName}, err => {
+            User.findByIdAndDelete(userId, err => {
                 if (err) return res.sendStatus(500)
         
                 res.clearCookie('accessToken', { path: '/api' })

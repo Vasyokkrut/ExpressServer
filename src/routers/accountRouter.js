@@ -137,6 +137,7 @@ accountRouter.get('/getNewAccessToken', (req, res) => {
 
         User.findById(user._id, (err, doc) => {
             if (err) return res.sendStatus(500)
+            if (!doc) return res.sendStatus(404)
             if (user.password !== doc.password) return res.sendStatus(403)
 
             JWT.sign(
